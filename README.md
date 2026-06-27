@@ -1,8 +1,23 @@
 # IRONLEDGER — Neo-Brutalist Gym Tracker
 
-A local-first gym tracker. Browse a 161-lift exercise database (parsed from your
-encyclopedia), log sessions, track lifetime tonnage, and read a safety/form guide.
-Push reminders are wired through the **OneSignal Web SDK (v16)**.
+A local-first gym tracker. Open on a **cover page**, browse a 161-lift exercise
+database (parsed from your encyclopedia), log sessions, **auto-generate your next
+workout**, track lifetime tonnage, and read a safety/form guide. Push reminders
+are wired through the **OneSignal Web SDK (v16)**.
+
+Everything is static (HTML/CSS/vanilla JS, no build step), so it deploys as-is to
+**GitHub Pages** — keep all files at the repo root so `OneSignalSDKWorker.js`
+stays reachable at the site root.
+
+## Workout engine (Generate tab)
+A layered, click-through builder — pick a source, tune it, then get a workout you
+can load straight into the logger:
+- **From your history** — *repeat your last session*, your *most-frequent lifts*,
+  or *progressive overload* (+2.5% on each lift's last load).
+- **By intensity** — auto-generate from the full database, dialled to a training
+  intensity (**Deload / Hypertrophy / Strength / Conditioning**) and a muscle
+  focus. Weights are scaled from your logged bests when you've trained the lift,
+  or sensible equipment baselines otherwise.
 
 ## Files
 ```

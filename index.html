@@ -28,7 +28,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="cover-open">
+
+  <!-- ===================== COVER / SPLASH ===================== -->
+  <div id="cover" class="cover">
+    <div class="cover-inner">
+      <div class="cover-mark">IL</div>
+      <h1 class="cover-title">IRONLEDGER</h1>
+      <p class="cover-tag mono">LIFT · LOG · REPEAT</p>
+      <p class="cover-lede">A local-first gym tracker. Browse 161 lifts, log every
+        session, and let the engine build your next workout from your own history
+        — or auto-generate one to a target intensity.</p>
+      <div class="cover-stats">
+        <div><b id="coverTonnage">0</b><span>kg lifetime</span></div>
+        <div><b id="coverSessions">0</b><span>sessions</span></div>
+        <div><b>161</b><span>lifts</span></div>
+      </div>
+      <button class="btn primary cover-enter" id="enterBtn">Enter the ledger →</button>
+      <p class="cover-foot mono">Your data never leaves this browser.</p>
+    </div>
+  </div>
 
   <header class="top">
     <div class="top-inner">
@@ -52,6 +71,7 @@
     <nav class="tabs" role="tablist">
       <button class="tab" data-view="database" role="tab" aria-selected="true">Database</button>
       <button class="tab" data-view="log"      role="tab" aria-selected="false">Log Session</button>
+      <button class="tab" data-view="generate" role="tab" aria-selected="false">Generate</button>
       <button class="tab" data-view="history"  role="tab" aria-selected="false">History</button>
       <button class="tab" data-view="safety"   role="tab" aria-selected="false">Safety &amp; Form</button>
     </nav>
@@ -103,6 +123,56 @@
             <p class="mono" style="font-size:11px;margin-top:14px;opacity:.7">Tonnage = sets × reps × weight, summed across every lift.</p>
           </div>
         </aside>
+      </div>
+    </section>
+
+    <!-- ========================= GENERATE ========================= -->
+    <section class="view" id="view-generate" role="tabpanel">
+      <span class="section-eyebrow">Workout engine · build your next session</span>
+
+      <ol class="stepper" id="genSteps">
+        <li data-step="1" data-on="true">1 · Source</li>
+        <li data-step="2">2 · Tune</li>
+        <li data-step="3">3 · Workout</li>
+      </ol>
+
+      <!-- LAYER 1 — choose source -->
+      <div class="layer" id="genLayer1">
+        <div class="choice-grid">
+          <button class="choice" data-mode="history">
+            <span class="choice-k mono">01</span>
+            <h3>From your history</h3>
+            <p>Rebuild from what you've actually logged — repeat your last session,
+               hit your most-frequent lifts, or layer on progressive overload.</p>
+            <span class="choice-go">Choose →</span>
+          </button>
+          <button class="choice" data-mode="intensity">
+            <span class="choice-k mono">02</span>
+            <h3>By intensity</h3>
+            <p>Auto-generate a fresh session from the 161-lift database, dialled to a
+               training intensity and a muscle focus.</p>
+            <span class="choice-go">Choose →</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LAYER 2 — tune (built by JS) -->
+      <div class="layer" id="genLayer2" hidden>
+        <div class="panel" id="genConfig"></div>
+        <div class="savebar">
+          <button class="btn primary" id="genBtn">Generate workout →</button>
+          <button class="btn ghost" id="genBack1">← Back</button>
+        </div>
+      </div>
+
+      <!-- LAYER 3 — result -->
+      <div class="layer" id="genLayer3" hidden>
+        <div id="genResult"></div>
+        <div class="savebar">
+          <button class="btn primary" id="genLoad">Load into logger →</button>
+          <button class="btn dark" id="genRegen">↻ Regenerate</button>
+          <button class="btn ghost" id="genBack2">← Tune</button>
+        </div>
       </div>
     </section>
 
