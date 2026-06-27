@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IRONLEDGER · Gym Tracker</title>
+  <meta name="description" content="A Neo-Brutalist gym tracker — browse a full exercise database, log sessions, track tonnage." />
+
+  <!-- ===== OneSignal Web SDK (v16) =====================================
+       Per https://documentation.onesignal.com/docs/en/web-sdk-setup
+       Requires: HTTPS origin + OneSignalSDKWorker.js at site root +
+       a Web platform configured in the OneSignal dashboard for this App ID. -->
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      await OneSignal.init({
+        appId: "aadfb631-db03-4f50-83d0-f4054f63d307",
+        allowLocalhostAsSecureOrigin: true,   // lets you test on http://localhost
+      });
+    });
+  </script>
+  <!-- =================================================================== -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand">
+        <div class="mark">IL</div>
+        <div>
+          <h1>IRONLEDGER</h1>
+          <small>LIFT · LOG · REPEAT</small>
+        </div>
+      </div>
+      <div class="top-spacer"></div>
+      <div class="tonnage" title="Total weight moved across every saved session">
+        <span class="label">Lifetime tonnage</span>
+        <span class="num" id="tonnageNum" data-v="0">0</span>
+        <span class="unit">KG</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <nav class="tabs" role="tablist">
+      <button class="tab" data-view="database" role="tab" aria-selected="true">Database</button>
+      <button class="tab" data-view="log"      role="tab" aria-selected="false">Log Session</button>
+      <button class="tab" data-view="history"  role="tab" aria-selected="false">History</button>
+      <button class="tab" data-view="safety"   role="tab" aria-selected="false">Safety &amp; Form</button>
+    </nav>
+
+    <!-- ========================= DATABASE ========================= -->
+    <section class="view active" id="view-database" role="tabpanel">
+      <span class="section-eyebrow">The Rack · full exercise library</span>
+      <div class="filters">
+        <div class="search">
+          <label class="field-lbl">Search lifts</label>
+          <input id="search" type="text" placeholder="e.g. row, hip thrust, rotator…" autocomplete="off" />
+        </div>
+        <span class="countpill" id="dbCount">—</span>
+      </div>
+      <div class="chip-row" id="muscleChips" style="margin-bottom:10px"></div>
+      <div class="chip-row" id="equipChips" style="margin-bottom:20px"></div>
+      <div class="grid" id="dbGrid"></div>
+    </section>
+
+    <!-- ========================= LOG ========================= -->
+    <section class="view" id="view-log" role="tabpanel">
+      <span class="section-eyebrow">Today's work</span>
+      <div class="bell">
+        <div class="big">Workout reminders
+          <span class="sub">Push notifications via OneSignal — never skip leg day.</span>
+        </div>
+        <span class="status" id="bellStatus">—</span>
+        <button class="btn dark" id="bellBtn">Enable reminders</button>
+      </div>
+
+      <div class="two-col">
+        <div class="left">
+          <div class="datechip" style="margin-bottom:14px">
+            <label class="field-lbl">Session date</label><br/>
+            <input type="date" id="sessDate" />
+          </div>
+          <div id="logRows"></div>
+          <div class="savebar">
+            <button class="btn primary" id="saveBtn" disabled>Save session</button>
+            <button class="btn ghost" id="clearBtn">Clear</button>
+          </div>
+        </div>
+        <aside class="right">
+          <div class="panel summary">
+            <span class="section-eyebrow">Live totals</span>
+            <div class="stat"><span>Lifts</span><b id="sumLifts">0</b></div>
+            <div class="stat"><span>Total sets</span><b id="sumSets">0</b></div>
+            <div class="stat"><span>Tonnage (kg)</span><b id="sumTons">0</b></div>
+            <p class="mono" style="font-size:11px;margin-top:14px;opacity:.7">Tonnage = sets × reps × weight, summed across every lift.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ========================= HISTORY ========================= -->
+    <section class="view" id="view-history" role="tabpanel">
+      <span class="section-eyebrow">The ledger</span>
+      <div class="panel summary" style="margin-bottom:20px;display:flex;gap:40px;flex-wrap:wrap">
+        <div class="stat" style="border:none;flex:1;min-width:140px"><span>Sessions logged</span><b id="histCount">0</b></div>
+        <div class="stat" style="border:none;flex:1;min-width:140px"><span>Lifetime tonnage</span><b id="histTotal">0</b></div>
+      </div>
+      <div class="hist" id="histList"></div>
+    </section>
+
+    <!-- ========================= SAFETY ========================= -->
+    <section class="view" id="view-safety" role="tabpanel">
+      <span class="section-eyebrow">Stay in the game</span>
+
+      <h2 style="font-size:26px;margin:6px 0 14px">Common injuries &amp; prevention</h2>
+      <div id="injuries"></div>
+
+      <h2 style="font-size:26px;margin:30px 0 14px">Red flags — DOMS vs injury</h2>
+      <div class="scrollx"><table class="brut" id="redFlags"></table></div>
+      <div class="panel" style="margin-bottom:26px">
+        <span class="section-eyebrow">See a doctor / physio when</span>
+        <ul style="margin:6px 0 0 18px;display:flex;flex-direction:column;gap:6px" id="seePro"></ul>
+      </div>
+
+      <h2 style="font-size:26px;margin:6px 0 14px">Form correction — external cues</h2>
+      <div class="scrollx"><table class="brut" id="cues"></table></div>
+
+      <h2 style="font-size:26px;margin:26px 0 14px">The bracing sequence</h2>
+      <div class="panel"><ul class="session" style="list-style:none" id="brace"></ul></div>
+    </section>
+
+    <footer>
+      <span>IRONLEDGER — local-first gym tracker · data stays in your browser</span>
+      <span>EXERCISE DB: 161 LIFTS · 7 GROUPS</span>
+    </footer>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
