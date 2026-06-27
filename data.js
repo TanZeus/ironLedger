@@ -1,0 +1,274 @@
+/* =========================================================================
+   IRONLEDGER · LOCAL EXERCISE DATABASE
+   Parsed from "The Ultimate Exercise Encyclopedia".
+   Each row: [name, muscle, group, equipment, focus]
+   ========================================================================= */
+
+const RAW = [
+  /* ---------------- BACK ---------------- */
+  ["Pull-Up (Overhand)","Back","Vertical Pull","Bodyweight","Width"],
+  ["Chin-Up (Underhand)","Back","Vertical Pull","Bodyweight","Width"],
+  ["Neutral Grip Pull-Up","Back","Vertical Pull","Bodyweight","Width"],
+  ["Weighted Pull-Up","Back","Vertical Pull","Bodyweight","Width"],
+  ["Dumbbell Pullover","Back","Vertical Pull","Dumbbell","Width"],
+  ["Lat Pulldown (Wide)","Back","Vertical Pull","Cable","Width"],
+  ["Lat Pulldown (Close)","Back","Vertical Pull","Cable","Width"],
+  ["Lat Pulldown (Reverse)","Back","Vertical Pull","Cable","Width"],
+  ["Single-Arm Cable Pulldown","Back","Vertical Pull","Cable","Width"],
+  ["Straight-Arm Pulldown","Back","Vertical Pull","Cable","Width"],
+  ["Hammer Strength High Row","Back","Vertical Pull","Machine","Width"],
+  ["Assisted Pull-Up Machine","Back","Vertical Pull","Machine","Width"],
+  ["Bent-Over Row","Back","Horizontal Pull","Barbell","Thickness"],
+  ["Pendlay Row","Back","Horizontal Pull","Barbell","Thickness"],
+  ["Yates Row (Underhand)","Back","Horizontal Pull","Barbell","Thickness"],
+  ["T-Bar Row","Back","Horizontal Pull","Barbell","Thickness"],
+  ["Landmine Row","Back","Horizontal Pull","Barbell","Thickness"],
+  ["Meadows Row","Back","Horizontal Pull","Barbell","Thickness"],
+  ["Single-Arm Dumbbell Row","Back","Horizontal Pull","Dumbbell","Thickness"],
+  ["Chest-Supported Row","Back","Horizontal Pull","Dumbbell","Thickness"],
+  ["Incline Dumbbell Row","Back","Horizontal Pull","Dumbbell","Thickness"],
+  ["Gorilla Row","Back","Horizontal Pull","Dumbbell","Thickness"],
+  ["Renegade Row","Back","Horizontal Pull","Dumbbell","Core"],
+  ["Seated Cable Row (V-Bar)","Back","Horizontal Pull","Cable","Thickness"],
+  ["Seated Cable Row (Wide)","Back","Horizontal Pull","Cable","Thickness"],
+  ["Seated Cable Row (Single-Arm)","Back","Horizontal Pull","Cable","Thickness"],
+  ["Face Pulls","Back","Horizontal Pull","Cable","Upper Back"],
+  ["Seated Machine Row (Neutral)","Back","Horizontal Pull","Machine","Thickness"],
+  ["Seated Machine Row (Wide)","Back","Horizontal Pull","Machine","Thickness"],
+  ["Low Row Machine","Back","Horizontal Pull","Machine","Thickness"],
+  ["Conventional Deadlift","Back","Lower Back","Barbell","Posterior Chain"],
+  ["Rack Pulls","Back","Lower Back","Barbell","Posterior Chain"],
+  ["Good Mornings","Back","Lower Back","Barbell","Posterior Chain"],
+  ["Back Extensions (45°)","Back","Lower Back","Bodyweight","Posterior Chain"],
+  ["Superman","Back","Lower Back","Bodyweight","Posterior Chain"],
+  ["Barbell Shrugs","Back","Traps","Barbell","Traps"],
+  ["Dumbbell Shrugs","Back","Traps","Dumbbell","Traps"],
+  ["Cable Shrugs","Back","Traps","Cable","Traps"],
+
+  /* ---------------- CHEST ---------------- */
+  ["Incline Barbell Press","Chest","Upper Chest","Barbell","Clavicular"],
+  ["Incline Dumbbell Press","Chest","Upper Chest","Dumbbell","Clavicular"],
+  ["Incline Machine Press","Chest","Upper Chest","Machine","Clavicular"],
+  ["Landmine Press","Chest","Upper Chest","Barbell","Clavicular"],
+  ["Low-to-High Cable Fly","Chest","Upper Chest","Cable","Clavicular"],
+  ["Incline Dumbbell Fly","Chest","Upper Chest","Dumbbell","Clavicular"],
+  ["Decline Push-ups","Chest","Upper Chest","Bodyweight","Clavicular"],
+  ["Flat Barbell Bench Press","Chest","Middle Chest","Barbell","Sternal"],
+  ["Flat Dumbbell Press","Chest","Middle Chest","Dumbbell","Sternal"],
+  ["Floor Press","Chest","Middle Chest","Barbell","Sternal"],
+  ["Machine Chest Press","Chest","Middle Chest","Machine","Sternal"],
+  ["Flat Dumbbell Fly","Chest","Middle Chest","Dumbbell","Sternal"],
+  ["Pec Deck","Chest","Middle Chest","Machine","Sternal"],
+  ["Mid-Height Cable Fly","Chest","Middle Chest","Cable","Sternal"],
+  ["Standard Push-ups","Chest","Middle Chest","Bodyweight","Sternal"],
+  ["Wide-Grip Push-ups","Chest","Middle Chest","Bodyweight","Sternal"],
+  ["Decline Barbell Press","Chest","Lower Chest","Barbell","Costal"],
+  ["Decline Dumbbell Press","Chest","Lower Chest","Dumbbell","Costal"],
+  ["Decline Machine Press","Chest","Lower Chest","Machine","Costal"],
+  ["High-to-Low Cable Fly (Crossover)","Chest","Lower Chest","Cable","Costal"],
+  ["Decline Dumbbell Fly","Chest","Lower Chest","Dumbbell","Costal"],
+  ["Chest Dips","Chest","Lower Chest","Bodyweight","Costal"],
+  ["Incline Push-ups","Chest","Lower Chest","Bodyweight","Costal"],
+
+  /* ---------------- SHOULDERS ---------------- */
+  ["Military Press","Shoulders","Front Delts","Barbell","Anterior"],
+  ["Seated Shoulder Press (DB)","Shoulders","Front Delts","Dumbbell","Anterior"],
+  ["Seated Shoulder Press (Machine)","Shoulders","Front Delts","Machine","Anterior"],
+  ["Arnold Press","Shoulders","Front Delts","Dumbbell","Anterior"],
+  ["Dumbbell Front Raise","Shoulders","Front Delts","Dumbbell","Anterior"],
+  ["Cable Front Raise","Shoulders","Front Delts","Cable","Anterior"],
+  ["Plate Front Raise","Shoulders","Front Delts","Plate","Anterior"],
+  ["Dumbbell Lateral Raise","Shoulders","Side Delts","Dumbbell","Lateral"],
+  ["Cable Lateral Raise","Shoulders","Side Delts","Cable","Lateral"],
+  ["Machine Lateral Raise","Shoulders","Side Delts","Machine","Lateral"],
+  ["Wide-Grip Upright Row (Barbell)","Shoulders","Side Delts","Barbell","Lateral"],
+  ["Wide-Grip Upright Row (Cable)","Shoulders","Side Delts","Cable","Lateral"],
+  ["Landmine Lateral Raise","Shoulders","Side Delts","Barbell","Lateral"],
+  ["Machine Reverse Fly","Shoulders","Rear Delts","Machine","Posterior"],
+  ["Cable Rear Delt Fly","Shoulders","Rear Delts","Cable","Posterior"],
+  ["Dumbbell Reverse Fly","Shoulders","Rear Delts","Dumbbell","Posterior"],
+  ["Wide-Grip Seated Row","Shoulders","Rear Delts","Cable","Posterior"],
+
+  /* ---------------- ARMS ---------------- */
+  ["Incline Dumbbell Curl","Arms","Biceps","Dumbbell","Long Head"],
+  ["High Cable Curl","Arms","Biceps","Cable","Long Head"],
+  ["Drag Curl","Arms","Biceps","Barbell","Long Head"],
+  ["Bayesian Curl","Arms","Biceps","Cable","Long Head"],
+  ["Preacher Curl","Arms","Biceps","Barbell","Short Head"],
+  ["Spider Curl","Arms","Biceps","Dumbbell","Short Head"],
+  ["Concentration Curl","Arms","Biceps","Dumbbell","Short Head"],
+  ["Barbell Curl","Arms","Biceps","Barbell","Overall"],
+  ["EZ-Bar Curl","Arms","Biceps","Barbell","Overall"],
+  ["Zottman Curl","Arms","Biceps","Dumbbell","Bicep + Forearm"],
+  ["Overhead Cable Extension","Arms","Triceps","Cable","Long Head"],
+  ["Overhead Dumbbell Extension","Arms","Triceps","Dumbbell","Long Head"],
+  ["Skull Crushers","Arms","Triceps","Barbell","Long Head"],
+  ["Cable Pushdown (Rope)","Arms","Triceps","Cable","Lateral Head"],
+  ["Cable Pushdown (Straight Bar)","Arms","Triceps","Cable","Lateral Head"],
+  ["Diamond Push-ups","Arms","Triceps","Bodyweight","Lateral Head"],
+  ["Close-Grip Bench Press","Arms","Triceps","Barbell","Medial Head"],
+  ["Dips (Parallel Bar)","Arms","Triceps","Bodyweight","Medial Head"],
+  ["Hammer Curls (DB)","Arms","Brachialis","Dumbbell","Brachialis"],
+  ["Hammer Curls (Cable)","Arms","Brachialis","Cable","Brachialis"],
+  ["Reverse Curls (Barbell)","Arms","Brachialis","Barbell","Brachialis"],
+  ["Wrist Curls (Palms Up)","Arms","Forearms","Dumbbell","Forearms"],
+  ["Reverse Wrist Curls","Arms","Forearms","Dumbbell","Forearms"],
+  ["Dead Hangs","Arms","Forearms","Bodyweight","Grip"],
+
+  /* ---------------- LEGS ---------------- */
+  ["Back Squat (High Bar)","Legs","Quadriceps","Barbell","Quads"],
+  ["Front Squat","Legs","Quadriceps","Barbell","Quads"],
+  ["Leg Press","Legs","Quadriceps","Machine","Quads"],
+  ["Hack Squat","Legs","Quadriceps","Machine","Quads"],
+  ["Zercher Squat","Legs","Quadriceps","Barbell","Quads"],
+  ["Bulgarian Split Squat","Legs","Quadriceps","Dumbbell","Unilateral"],
+  ["Walking Lunges","Legs","Quadriceps","Dumbbell","Unilateral"],
+  ["Step-Ups","Legs","Quadriceps","Dumbbell","Unilateral"],
+  ["Leg Extension","Legs","Quadriceps","Machine","Isolation"],
+  ["Sissy Squat","Legs","Quadriceps","Bodyweight","Isolation"],
+  ["Romanian Deadlift","Legs","Hamstrings","Barbell","Hip Extension"],
+  ["Stiff-Leg Deadlift","Legs","Hamstrings","Barbell","Hip Extension"],
+  ["Single-Leg RDL","Legs","Hamstrings","Dumbbell","Hip Extension"],
+  ["Seated Leg Curl","Legs","Hamstrings","Machine","Knee Flexion"],
+  ["Lying Leg Curl","Legs","Hamstrings","Machine","Knee Flexion"],
+  ["Nordic Hamstring Curl","Legs","Hamstrings","Bodyweight","Knee Flexion"],
+  ["Glute-Ham Raise","Legs","Hamstrings","Bodyweight","Knee Flexion"],
+  ["Barbell Hip Thrust","Legs","Glutes","Barbell","Heavy"],
+  ["Glute Bridge","Legs","Glutes","Barbell","Heavy"],
+  ["Sumo Deadlift","Legs","Glutes","Barbell","Heavy"],
+  ["Cable Kickbacks","Legs","Glutes","Cable","Isolation"],
+  ["Hip Abductor Machine","Legs","Glutes","Machine","Isolation"],
+  ["Clamshells","Legs","Glutes","Bodyweight","Isolation"],
+  ["Frog Pumps","Legs","Glutes","Bodyweight","Isolation"],
+  ["Standing Calf Raise","Legs","Calves","Machine","Gastrocnemius"],
+  ["Leg Press Calf Press","Legs","Calves","Machine","Gastrocnemius"],
+  ["Donkey Calf Raise","Legs","Calves","Machine","Gastrocnemius"],
+  ["Seated Calf Raise","Legs","Calves","Machine","Soleus"],
+
+  /* ---------------- CORE ---------------- */
+  ["Hanging Leg Raises","Core","Rectus Abdominis","Bodyweight","Lower"],
+  ["Reverse Crunches","Core","Rectus Abdominis","Bodyweight","Lower"],
+  ["Mountain Climbers","Core","Rectus Abdominis","Bodyweight","Lower"],
+  ["Crunches","Core","Rectus Abdominis","Bodyweight","Upper"],
+  ["V-Ups","Core","Rectus Abdominis","Bodyweight","Upper"],
+  ["Sit-Ups (Decline)","Core","Rectus Abdominis","Bodyweight","Upper"],
+  ["Ab Wheel Rollout","Core","Rectus Abdominis","Bodyweight","Anti-Extension"],
+  ["Planks","Core","Rectus Abdominis","Bodyweight","Anti-Extension"],
+  ["Hollow Holds","Core","Rectus Abdominis","Bodyweight","Anti-Extension"],
+  ["Russian Twists","Core","Obliques","Bodyweight","Rotation"],
+  ["Woodchops","Core","Obliques","Cable","Rotation"],
+  ["Bicycle Crunches","Core","Obliques","Bodyweight","Rotation"],
+  ["Side Plank Dips","Core","Obliques","Bodyweight","Lateral Flexion"],
+  ["Heel Taps","Core","Obliques","Bodyweight","Lateral Flexion"],
+  ["Windmills","Core","Obliques","Dumbbell","Lateral Flexion"],
+  ["Pallof Press","Core","Obliques","Cable","Anti-Rotation"],
+  ["Stomach Vacuums","Core","Transverse Abdominis","Bodyweight","Stability"],
+  ["Dead Bug","Core","Transverse Abdominis","Bodyweight","Stability"],
+  ["Bird Dog","Core","Transverse Abdominis","Bodyweight","Stability"],
+  ["Pelvic Tilts","Core","Transverse Abdominis","Bodyweight","Stability"],
+
+  /* ---------------- FUNCTIONAL ---------------- */
+  ["Turkish Get-Up","Functional","Kettlebell","Kettlebell","Total Body"],
+  ["Kettlebell Swing","Functional","Kettlebell","Kettlebell","Posterior Power"],
+  ["Kettlebell Snatch","Functional","Kettlebell","Kettlebell","Vertical Power"],
+  ["Steel Mace 360 Swing","Functional","Steel Mace","Steel Mace","Rotational"],
+  ["Barbarian Squat","Functional","Steel Mace","Steel Mace","Overhead Mobility"],
+  ["10-to-2s","Functional","Steel Mace","Steel Mace","Grip Endurance"],
+  ["Sandbag Shouldering","Functional","Sandbag","Sandbag","Explosive Power"],
+  ["Bear Hug Squat / Carry","Functional","Sandbag","Sandbag","Midline Stability"],
+  ["Rotational Lunge","Functional","Sandbag","Sandbag","Rotational Torque"],
+  ["Trap Bar Deadlift","Functional","Full Body","Trap Bar","Hip Hinge"],
+  ["Farmer's Carries","Functional","Full Body","Dumbbell","Grip + Core"],
+];
+
+const EXERCISES = RAW.map((r, i) => ({
+  id: i + 1,
+  name: r[0],
+  muscle: r[1],
+  group: r[2],
+  equipment: r[3],
+  focus: r[4],
+}));
+
+const MUSCLES = ["Back","Chest","Shoulders","Arms","Legs","Core","Functional"];
+const EQUIPMENT = [...new Set(EXERCISES.map(e => e.equipment))].sort();
+
+/* Per-muscle accent so the database reads like a colour-coded rack */
+const MUSCLE_COLOR = {
+  Back:"var(--blue)",
+  Chest:"var(--coral)",
+  Shoulders:"var(--violet)",
+  Arms:"var(--yellow)",
+  Legs:"var(--lime)",
+  Core:"var(--orange)",
+  Functional:"var(--ink)",
+};
+
+/* =========================================================================
+   SAFETY & FORM  ·  Parsed from "Gym Safety & Form Correction Guide"
+   ========================================================================= */
+
+const INJURIES = [
+  {
+    area:"Rotator Cuff — Shoulder",
+    issue:"Impingement or tears from high-volume overhead work, poor scapular stability, or internal rotation under heavy load.",
+    prevention:[
+      "External rotations to strengthen the infraspinatus and teres minor (face pulls, band pull-aparts).",
+      "Scapular stability work: prone Y-T-W-L raises and scapular push-ups.",
+      "Thoracic mobility so the upper back can extend and rotate instead of the shoulder overcompensating.",
+    ],
+    tip:"Skip behind-the-neck presses if mobility is limited — use the Landmine Press as a joint-friendly alternative.",
+  },
+  {
+    area:"Lower Back — Lumbar Spine",
+    issue:"Disc herniation or muscle strains from lumbar flexion (rounding) or excessive extension under load.",
+    prevention:[
+      "Bracing (IAP): inhale into the belly and brace as if taking a punch.",
+      "The proximity principle: keep the bar as close to your shins and body as possible to cut spinal torque.",
+      "Hip mobility — tight hips force the lower back to round in a deep squat (the 'butt wink').",
+    ],
+    tip:"Switch to a Trap Bar Deadlift if a straight bar bothers your back; it keeps load nearer your centre of gravity.",
+  },
+  {
+    area:"Knees — Patellofemoral Joint",
+    issue:"Tendonitis or joint pain from knee caving (valgus) or shifting weight too far forward.",
+    prevention:[
+      "Glute medius strengthening: lateral band walks to stop the knees drifting inward.",
+      "Ankle mobility so heels stay grounded through the rep.",
+      "Backward progressions — reverse lunges over forward lunges if knees are sensitive (less deceleration force).",
+    ],
+    tip:"Drive through the heels to move load off the kneecap and onto the posterior chain (glutes and hamstrings).",
+  },
+];
+
+const RED_FLAGS = [
+  ["Onset","24–48 hours after training","Immediate or during a specific rep"],
+  ["Sensation","Dull ache, tightness","Sharp, stabbing, or electrical"],
+  ["Symmetry","Usually both sides","One specific spot"],
+  ["Swelling","None","Visible swelling, bruising, deformity"],
+  ["Joint feel","Normal","Giving out, locking, or popping"],
+  ["Numbness","None","Tingling or loss of sensation"],
+];
+
+const SEE_PRO = [
+  "Inability to bear weight on a limb.",
+  "Severe swelling within hours of the incident.",
+  "Night pain that prevents sleep.",
+  "No improvement after 72 hours of rest and ice.",
+];
+
+const CUES = [
+  ["Squat","Knees caving in","Spread the floor with your feet."],
+  ["Squat","Hips rising too fast","Drive the ceiling away with your back."],
+  ["Deadlift","Rounded lower back","Protect your armpits (engages the lats)."],
+  ["Deadlift","Hips rising too fast","Push the world down through your feet."],
+  ["Bench Press","Elbows flaring out","Break the bar in half."],
+  ["Bench Press","Losing tightness","Push yourself into the bench."],
+];
+
+const BRACE = [
+  "Stand tall — ribs down, pelvis neutral.",
+  "Big breath — inhale into your stomach (360° expansion).",
+  "Brace — tighten your core like someone's about to punch you.",
+  "Execute — hold that pressure through the entire rep.",
+];

@@ -1,1 +1,57 @@
-# ironLedger
+# IRONLEDGER — Neo-Brutalist Gym Tracker
+
+A local-first gym tracker. Browse a 161-lift exercise database (parsed from your
+encyclopedia), log sessions, track lifetime tonnage, and read a safety/form guide.
+Push reminders are wired through the **OneSignal Web SDK (v16)**.
+
+## Files
+```
+index.html            Main page — OneSignal SDK is initialised in <head>
+styles.css            Neo-Brutalist styles
+data.js               Exercise DB (161 lifts) + safety/form content
+app.js                Browser, logger, history, safety, OneSignal hooks
+OneSignalSDKWorker.js  Service worker — MUST sit at the site root
+manifest.json         Web app manifest (needed for iOS 16.4+ web push)
+```
+Your data is saved in the browser via `localStorage` — nothing leaves the device
+except the OneSignal subscription.
+
+## Run locally
+Service workers need a server (not `file://`). From this folder:
+```bash
+python3 -m http.server 8000
+# open http://localhost:8000
+```
+`allowLocalhostAsSecureOrigin: true` is already set in `index.html` so localhost works.
+In the OneSignal dashboard create a **separate app** for localhost and set its
+Site URL to `http://localhost:8000`.
+
+## Deploy (push needs HTTPS)
+Web push only works over **HTTPS** on a single origin. Any static host works
+(Netlify, Vercel, Cloudflare Pages, GitHub Pages, S3+CloudFront, your own server).
+
+1. Upload all files so `OneSignalSDKWorker.js` is reachable at
+   `https://yourdomain.com/OneSignalSDKWorker.js` (served as
+   `Content-Type: application/javascript`, not via a CDN redirect).
+2. In the OneSignal dashboard → **Settings → Push & In-App → Web**:
+   - Activate the **Web** platform, integration type **Custom Code**.
+   - Set **Site URL** to your exact origin (e.g. `https://yourdomain.com`,
+     no `www.` unless that's your real host).
+   - Upload a 256×256 PNG as the default notification icon.
+3. The App ID is already in `index.html`:
+   `aadfb631-db03-4f50-83d0-f4054f63d307`.
+
+## How the integration is wired
+- **Init** — `index.html` `<head>` loads `OneSignalSDK.page.js` and calls
+  `OneSignal.init({ appId })` via the `OneSignalDeferred` queue (the pattern
+  from OneSignal's setup guide).
+- **Opt-in** — the *Enable reminders* button in the Log tab calls
+  `OneSignal.Slidedown.promptPush()`.
+- **Tags** — saving a session sets `sessions_logged` and `last_workout` tags
+  (and an `app=ironledger` tag on opt-in) so you can build segments like
+  "hasn't logged in 3 days" and target streak reminders.
+
+## iOS note
+On iPhone/iPad, web push needs the user to **Add to Home Screen** first
+(iOS 16.4+). `manifest.json` is already linked for that. Add real
+`icon-192.png` / `icon-512.png` files referenced in the manifest.
