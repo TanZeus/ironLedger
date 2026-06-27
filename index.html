@@ -113,6 +113,12 @@
         <div class="stat" style="border:none;flex:1;min-width:140px"><span>Sessions logged</span><b id="histCount">0</b></div>
         <div class="stat" style="border:none;flex:1;min-width:140px"><span>Lifetime tonnage</span><b id="histTotal">0</b></div>
       </div>
+      <div class="savebar" style="margin-bottom:20px">
+        <button class="btn dark" id="exportBtn">Export backup</button>
+        <button class="btn ghost" id="importBtn">Import backup</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden />
+        <span class="mono" style="font-size:11px;opacity:.7">Back up your ledger or move it to another browser.</span>
+      </div>
       <div class="hist" id="histList"></div>
     </section>
 

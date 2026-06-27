@@ -16,6 +16,17 @@ manifest.json         Web app manifest (needed for iOS 16.4+ web push)
 Your data is saved in the browser via `localStorage` — nothing leaves the device
 except the OneSignal subscription.
 
+### Saving & backups
+- **Saved sessions** persist under the `ironledger.v1` key. If the browser
+  blocks storage (private mode) or the quota is full, the save is reported as
+  failed instead of silently lost.
+- **In-progress drafts** auto-save under `ironledger.draft.v1`, so a refresh or
+  crash mid-workout won't lose the lifts you've entered.
+- **Export / Import** (History tab) downloads your whole ledger as a JSON file
+  and restores it — useful for backups, clearing-cache survival, or moving the
+  data to another browser or device. Imports are *merged* (de-duped by id), not
+  overwritten.
+
 ## Run locally
 Service workers need a server (not `file://`). From this folder:
 ```bash

@@ -4,14 +4,33 @@
 const $  = (s,el=document)=>el.querySelector(s);
 const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
 const STORE = "ironledger.v1";
+const DRAFT_STORE = "ironledger.draft.v1";
 
-/* ---------- persistence ---------- */
+/* ---------- persistence ----------
+   localStorage can be unavailable (private mode) or full (quota). We probe
+   once, and every write reports success so the UI can warn instead of
+   silently losing a workout. */
+function storageAvailable(){
+  try{
+    const k="__ironledger_probe__";
+    localStorage.setItem(k,"1"); localStorage.removeItem(k);
+    return true;
+  }catch{ return false; }
+}
+const STORAGE_OK = storageAvailable();
+
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE)) || {sessions:[]}; }catch{ return {sessions:[]}; } }
-function save(d){ try{ localStorage.setItem(STORE, JSON.stringify(d)); }catch{} }
+function save(d){
+  try{ localStorage.setItem(STORE, JSON.stringify(d)); return true; }
+  catch(e){ console.error("IronLedger: session save failed", e); return false; }
+}
 let DB = load();
 
-/* current draft session: [{id,name,muscle,equipment,sets,reps,weight}] */
-let draft = [];
+/* current draft session: [{id,name,muscle,equipment,sets,reps,weight}].
+   Persisted on every change so a refresh or crash mid-workout doesn't lose it. */
+function loadDraft(){ try{ return JSON.parse(localStorage.getItem(DRAFT_STORE)) || []; }catch{ return []; } }
+function saveDraft(){ try{ localStorage.setItem(DRAFT_STORE, JSON.stringify(draft)); }catch{} }
+let draft = loadDraft();
 
 /* ---------- toast ---------- */
 let toastT;
@@ -127,6 +146,7 @@ function renderSummary(){
   $("#sumSets").textContent=sets;
   $("#sumTons").textContent=tons.toLocaleString();
   $("#saveBtn").disabled = lifts===0;
+  saveDraft();   // persist in-progress work so a refresh doesn't lose it
 }
 
 function saveSession(){
@@ -138,12 +158,14 @@ function saveSession(){
     items:draft.map(r=>({name:r.name,muscle:r.muscle,sets:r.sets,reps:r.reps,weight:r.weight,tonnage:rowTonnage(r)})),
   };
   DB.sessions.unshift(session);
-  save(DB);
+  const ok=save(DB);
   draft=[];
   renderDraft();
   renderHistory();
   animateTonnage(totalTonnage());
-  toast(`Session saved · ${tonnage.toLocaleString()} kg moved`);
+  toast(ok
+    ? `Session saved · ${tonnage.toLocaleString()} kg moved`
+    : "⚠ Couldn't save to this browser — export a backup to keep this!");
 
   /* tag the user in OneSignal so workout-streak segments are possible */
   pushTag("sessions_logged", String(DB.sessions.length));
@@ -181,6 +203,42 @@ function fmtDate(iso){
   const d=new Date(iso+"T00:00:00");
   if(isNaN(d)) return iso;
   return d.toLocaleDateString(undefined,{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
+}
+
+/* =========================================================================
+   BACKUP: export / import  (so data survives a cleared cache or new browser)
+   ========================================================================= */
+function exportData(){
+  try{
+    const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=`ironledger-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast(`Backup downloaded · ${DB.sessions.length} sessions`);
+  }catch(e){ console.error(e); toast("Export failed."); }
+}
+
+function importData(file){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const parsed=JSON.parse(reader.result);
+      if(!parsed || !Array.isArray(parsed.sessions)) throw new Error("not an IronLedger backup");
+      /* merge with what's already here, de-duping by session id */
+      const byId=new Map();
+      [...DB.sessions,...parsed.sessions].forEach(s=>{ if(s && s.id!=null) byId.set(s.id,s); });
+      DB.sessions=[...byId.values()].sort((a,b)=>b.id-a.id);
+      save(DB);
+      renderHistory();
+      animateTonnage(totalTonnage());
+      toast(`Imported · ${parsed.sessions.length} sessions merged`);
+    }catch(e){ console.error(e); toast("Import failed — not a valid IronLedger backup."); }
+  };
+  reader.onerror=()=>toast("Couldn't read that file.");
+  reader.readAsText(file);
 }
 
 /* =========================================================================
@@ -275,7 +333,16 @@ function init(){
   $("#clearBtn").onclick=()=>{ if(draft.length){ draft=[]; renderDraft(); toast("Session cleared."); } };
   $("#bellBtn").onclick=enableReminders;
 
+  /* backup controls */
+  $("#exportBtn").onclick=exportData;
+  $("#importBtn").onclick=()=>$("#importFile").click();
+  $("#importFile").onchange=e=>{ const f=e.target.files[0]; if(f){ importData(f); e.target.value=""; } };
+
   animateTonnage(totalTonnage());
   refreshBellStatus();
+
+  if(!STORAGE_OK){
+    toast("⚠ This browser blocks local storage — sessions won't be saved. Export backups to keep them.");
+  }
 }
 document.addEventListener("DOMContentLoaded",init);
