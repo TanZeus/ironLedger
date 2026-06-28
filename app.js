@@ -353,8 +353,9 @@ function genFromIntensity(){
       if(arr&&arr.length) picks.push(arr.pop());
     }
   } else {
-    let pool=EXERCISES.filter(e=>e.muscle===gen.focus && owned(e));
-    if(!pool.length) pool=EXERCISES.filter(owned);
+    /* no owned lift for this muscle → return nothing so generate() can explain,
+       rather than silently handing back unrelated movements */
+    const pool=EXERCISES.filter(e=>e.muscle===gen.focus && owned(e));
     picks=shuffle(pool).slice(0,gen.count);
   }
   return picks.map(ex=>{
@@ -393,12 +394,28 @@ function genFromHistory(){
 function generate(){
   const rows = gen.mode==="history" ? genFromHistory() : genFromIntensity();
   if(!rows.length){
-    toast(gen.mode==="history" ? "No history yet — log a session, or use 'By intensity'." : "Couldn't build a workout.");
+    let msg="Couldn't build a workout.";
+    if(gen.mode==="history"){
+      msg="No history yet — log a session, or use 'By intensity'.";
+    } else if(gen.equipment.size && gen.equipment.size<EQUIPMENT.length){
+      msg = gen.focus==="Full body"
+        ? "No lifts match your equipment — add some gear above."
+        : `No ${gen.focus} lifts for your equipment — try another focus or add gear.`;
+    }
+    toast(msg);
     return;
   }
   gen.result=rows;
   renderGenResult();
   showLayer(3);
+}
+
+/* short label of the gear a generated workout was built from */
+function equipSummary(){
+  const sz=gen.equipment.size;
+  if(sz===0 || sz===EQUIPMENT.length) return "Full kit";
+  const list=[...gen.equipment];
+  return list.length<=3 ? list.join(" · ") : `${sz} equipment types`;
 }
 
 /* how many lifts the current equipment selection unlocks */
@@ -505,9 +522,17 @@ function renderGenResult(){
   const title = gen.mode==="intensity"
     ? `${INTENSITY[gen.intensity].label} · ${gen.focus}`
     : ({recent:"Repeat last session",frequent:"Most-frequent lifts",progressive:"Progressive overload"})[gen.histMode];
+  /* show the equipment the engine actually built from (intensity mode only) */
+  const sub = gen.mode==="intensity"
+    ? `${equipSummary()} · ${rows.length} lift${rows.length===1?"":"s"}`
+    : "";
   $("#genResult").innerHTML=`
     <div class="gen-head" style="box-shadow:6px 6px 0 ${accent}">
-      <div><span class="section-eyebrow">Generated workout</span><h3>${title}</h3></div>
+      <div>
+        <span class="section-eyebrow">Generated workout</span>
+        <h3>${title}</h3>
+        ${sub?`<p class="gen-sub mono">${sub}</p>`:""}
+      </div>
       <div class="gen-tot"><b>${tons.toLocaleString()}</b><span>kg planned</span></div>
     </div>
     <div class="gen-list">

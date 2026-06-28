@@ -282,6 +282,7 @@ footer{margin-top:40px;border-top:4px solid var(--ink);padding:20px 0;font-famil
   border:var(--bd);background:var(--paper);padding:18px 20px;margin-bottom:16px;box-shadow:var(--sh);
 }
 .gen-head h3{font-size:24px;margin-top:4px}
+.gen-sub{font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.65;margin-top:6px}
 .gen-tot{text-align:right}
 .gen-tot b{font-family:"Space Mono";font-size:28px;display:block}
 .gen-tot span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
