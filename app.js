@@ -416,7 +416,7 @@ function loadEquip(){
 }
 function saveEquip(set){ try{ localStorage.setItem(EQUIP_STORE, JSON.stringify([...set])); }catch{} }
 
-let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", goal:"fatLoss", equipment:loadEquip(), result:[] };
+let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", goal:"fatLoss", cardioFinisher:false, equipment:loadEquip(), result:[] };
 
 const INTENSITY = {
   deload:       {label:"Deload",       sets:2, reps:14, load:0.60, accent:"var(--blue)",   note:"Recovery — light, clean reps to flush volume without taxing you."},
@@ -556,6 +556,16 @@ function genFromHistory(){
   });
 }
 
+function cardioFinisherRows(){
+  if(!gen.cardioFinisher) return [];
+  if(gen.mode!=="intensity" && gen.mode!=="goal") return [];
+  if(gen.focus==="Cardio") return [];
+  const haveAll=gen.equipment.size===0||gen.equipment.size===EQUIPMENT.length;
+  const owned=ex=>haveAll||gen.equipment.has(ex.equipment);
+  const pool=shuffle(EXERCISES.filter(e=>e.muscle==="Cardio"&&owned(e)));
+  return pool.slice(0,2).map(ex=>toRow(ex,2,20,0,"cardio finisher"));
+}
+
 function generate(){
   const rows = gen.mode==="history" ? genFromHistory() : gen.mode==="goal" ? genFromGoal() : genFromIntensity();
   if(!rows.length){
@@ -570,7 +580,7 @@ function generate(){
     toast(msg);
     return;
   }
-  gen.result=rows;
+  gen.result=rows.concat(cardioFinisherRows());
   renderGenResult();
   showLayer(3);
 }
@@ -601,6 +611,10 @@ function renderGenConfig(){
       <input type="range" id="genCount" min="3" max="10" value="${gen.count}" aria-label="Number of exercises">
       <b class="mono" id="genCountVal">${gen.count}</b>
     </div>`;
+  const finisherBlock = `
+    <span class="section-eyebrow" style="margin-top:18px">Cardio</span>
+    <div class="chip-row"><button class="chip" data-finisher data-on="${gen.cardioFinisher}">Cardio finisher</button></div>
+    <p class="cfg-note">Off by default. Appends up to 2 cardio moves after the main work.</p>`;
 
   if(gen.mode==="intensity"){
     const intens=Object.entries(INTENSITY).map(([k,v])=>
@@ -622,7 +636,8 @@ function renderGenConfig(){
       <p class="cfg-note" id="equipNote">${equipNoteText()}</p>
       <span class="section-eyebrow" style="margin-top:18px">Focus</span>
       <div class="chip-row">${focusChips}</div>
-      ${countBlock}`;
+      ${countBlock}
+      ${finisherBlock}`;
   } else if(gen.mode==="goal"){
     const goalChips=Object.entries(GOALS).map(([k,v])=>
       `<button class="chip" data-goal="${k}" data-on="${k===gen.goal}">${esc(v.label)}</button>`).join("");
@@ -643,7 +658,8 @@ function renderGenConfig(){
       <p class="cfg-note" id="equipNote">${equipNoteText()}</p>
       <span class="section-eyebrow" style="margin-top:18px">Focus</span>
       <div class="chip-row">${focusChips}</div>
-      ${countBlock}`;
+      ${countBlock}
+      ${finisherBlock}`;
   } else {
     const modes=[
       ["recent","Repeat last session","Reload your most recent workout, exactly as logged."],
@@ -702,6 +718,8 @@ function wireGenConfig(){
     $$("[data-hmode]",box).forEach(c=>c.dataset.on=(c.dataset.hmode===gen.histMode));
     const extra=$("#histExtra"); if(extra) extra.hidden=(gen.histMode==="recent");
   });
+  const finBtn=$("[data-finisher]",box);
+  if(finBtn) finBtn.onclick=()=>{ gen.cardioFinisher=!gen.cardioFinisher; finBtn.dataset.on=gen.cardioFinisher; };
   const cnt=$("#genCount");
   if(cnt) cnt.oninput=()=>{ gen.count=+cnt.value; $("#genCountVal").textContent=cnt.value; };
 }
