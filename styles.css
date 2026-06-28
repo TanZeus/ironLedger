@@ -229,6 +229,7 @@ footer{margin-top:40px;border-top:4px solid var(--ink);padding:20px 0;font-famil
 .choice:hover{transform:translate(-3px,-3px)}
 .choice[data-mode="history"]:hover{box-shadow:9px 9px 0 var(--violet)}
 .choice[data-mode="intensity"]:hover{box-shadow:9px 9px 0 var(--lime)}
+.choice[data-mode="goal"]:hover{box-shadow:9px 9px 0 var(--orange)}
 .choice-k{position:absolute;top:14px;right:16px;font-size:13px;opacity:.4}
 .choice h3{font-size:24px}
 .choice p{font-size:14px;line-height:1.45;opacity:.8;flex:1}

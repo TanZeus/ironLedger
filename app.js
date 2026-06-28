@@ -416,13 +416,21 @@ function loadEquip(){
 }
 function saveEquip(set){ try{ localStorage.setItem(EQUIP_STORE, JSON.stringify([...set])); }catch{} }
 
-let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", equipment:loadEquip(), result:[] };
+let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", goal:"fatLoss", equipment:loadEquip(), result:[] };
 
 const INTENSITY = {
   deload:       {label:"Deload",       sets:2, reps:14, load:0.60, accent:"var(--blue)",   note:"Recovery — light, clean reps to flush volume without taxing you."},
   hypertrophy:  {label:"Hypertrophy",  sets:4, reps:10, load:0.75, accent:"var(--lime)",   note:"Muscle growth — moderate load in the classic 8–12 rep range."},
   strength:     {label:"Strength",     sets:5, reps:4,  load:0.90, accent:"var(--coral)",  note:"Heavy, low-rep work with long rests. Brace hard, leave 1–2 in the tank."},
   conditioning: {label:"Conditioning", sets:3, reps:18, load:0.50, accent:"var(--orange)", note:"High-rep, short-rest pump work to build work capacity."},
+};
+
+const GOALS = {
+  fatLoss:      {label:"Lose Weight",    sets:3, reps:20, load:0.50, accent:"var(--orange)", note:"Full-body circuits at high rep ranges to maximise calorie burn while preserving muscle.", equipPref:null,         bias:["Functional","Legs","Back"]},
+  buildMuscle:  {label:"Build Muscle",   sets:4, reps:10, load:0.75, accent:"var(--lime)",   note:"Classic hypertrophy rep range — moderate load, controlled tempo, 60–90 s rest between sets.", equipPref:null,         bias:null},
+  getStronger:  {label:"Get Stronger",   sets:5, reps:4,  load:0.90, accent:"var(--coral)",  note:"Heavy compound barbell lifts, long rests — leave 1–2 reps in the tank each set.", equipPref:"Barbell",    bias:null},
+  endurance:    {label:"Endurance",      sets:3, reps:25, load:0.40, accent:"var(--blue)",   note:"Light loads, very high reps, minimal rest — build cardiovascular and muscular stamina.", equipPref:"Bodyweight", bias:["Functional","Legs"]},
+  generalFitness:{label:"General Fitness",sets:3,reps:15, load:0.65, accent:"var(--violet)", note:"Balanced work across all major movement patterns — a solid, all-round base.", equipPref:null,         bias:null},
 };
 
 function historyIndex(){
@@ -487,6 +495,42 @@ function genFromIntensity(){
   });
 }
 
+function genFromGoal(){
+  const g=GOALS[gen.goal];
+  if(!g) return [];
+  const idx=historyIndex();
+  const haveAll=gen.equipment.size===0||gen.equipment.size===EQUIPMENT.length;
+  const ownedBase=ex=>haveAll||gen.equipment.has(ex.equipment);
+  const pickPool=muscle=>{
+    const all=EXERCISES.filter(e=>e.muscle===muscle&&ownedBase(e));
+    if(!g.equipPref) return shuffle([...all]);
+    const pref=all.filter(e=>e.equipment===g.equipPref);
+    return shuffle(pref.length>=2?[...pref]:[...all]);
+  };
+  let picks;
+  if(gen.focus==="Full body"){
+    const byMuscle={};
+    MUSCLES.forEach(m=>byMuscle[m]=pickPool(m));
+    const muscleOrder=g.bias
+      ?[...g.bias.filter(m=>byMuscle[m]?.length),...MUSCLES.filter(m=>!g.bias.includes(m)&&byMuscle[m]?.length)]
+      :MUSCLES.filter(m=>byMuscle[m]?.length);
+    picks=[];let mi=0,guard=0;
+    while(picks.length<gen.count&&muscleOrder.length&&guard++<400){
+      const arr=byMuscle[muscleOrder[mi++%muscleOrder.length]];
+      if(arr&&arr.length) picks.push(arr.pop());
+    }
+  } else {
+    picks=pickPool(gen.focus).slice(0,gen.count);
+  }
+  return picks.map(ex=>{
+    const h=idx.get(ex.name);
+    const anchor=h?(h.bestWeight||h.lastWeight||0):0;
+    const weight=h?anchor*g.load:baselineWeight(ex)*(g.load/0.75);
+    const why=h?`tuned to your best ${anchor}kg`:`${g.label.toLowerCase()} baseline`;
+    return toRow(ex,g.sets,g.reps,weight,why);
+  });
+}
+
 function genFromHistory(){
   if(!DB.sessions.length) return [];
   const idx=historyIndex();
@@ -512,7 +556,7 @@ function genFromHistory(){
 }
 
 function generate(){
-  const rows = gen.mode==="history" ? genFromHistory() : genFromIntensity();
+  const rows = gen.mode==="history" ? genFromHistory() : gen.mode==="goal" ? genFromGoal() : genFromIntensity();
   if(!rows.length){
     let msg="Couldn't build a workout.";
     if(gen.mode==="history"){
@@ -578,6 +622,27 @@ function renderGenConfig(){
       <span class="section-eyebrow" style="margin-top:18px">Focus</span>
       <div class="chip-row">${focusChips}</div>
       ${countBlock}`;
+  } else if(gen.mode==="goal"){
+    const goalChips=Object.entries(GOALS).map(([k,v])=>
+      `<button class="chip" data-goal="${k}" data-on="${k===gen.goal}">${esc(v.label)}</button>`).join("");
+    const equipChips=EQUIPMENT.map(e=>
+      `<button class="chip" data-equip="${e}" data-on="${gen.equipment.has(e)}">${esc(e)}</button>`).join("");
+    box.innerHTML=`
+      <span class="section-eyebrow">Goal</span>
+      <div class="chip-row">${goalChips}</div>
+      <p class="cfg-note" id="goalNote">${esc(GOALS[gen.goal].note)}</p>
+      <div class="equip-head" style="margin-top:18px">
+        <span class="section-eyebrow" style="margin-bottom:0">Equipment you have</span>
+        <span class="equip-tools">
+          <button class="linkbtn" data-equip-all>All</button>
+          <button class="linkbtn" data-equip-none>None</button>
+        </span>
+      </div>
+      <div class="chip-row" id="equipPick" style="margin-top:10px">${equipChips}</div>
+      <p class="cfg-note" id="equipNote">${equipNoteText()}</p>
+      <span class="section-eyebrow" style="margin-top:18px">Focus</span>
+      <div class="chip-row">${focusChips}</div>
+      ${countBlock}`;
   } else {
     const modes=[
       ["recent","Repeat last session","Reload your most recent workout, exactly as logged."],
@@ -606,6 +671,11 @@ function wireGenConfig(){
     gen.intensity=b.dataset.intensity;
     $$("[data-intensity]",box).forEach(c=>c.dataset.on=(c.dataset.intensity===gen.intensity));
     const n=$("#intNote"); if(n) n.textContent=INTENSITY[gen.intensity].note;
+  });
+  $$("[data-goal]",box).forEach(b=>b.onclick=()=>{
+    gen.goal=b.dataset.goal;
+    $$("[data-goal]",box).forEach(c=>c.dataset.on=(c.dataset.goal===gen.goal));
+    const n=$("#goalNote"); if(n) n.textContent=GOALS[gen.goal].note;
   });
   $$("[data-focus]",box).forEach(b=>b.onclick=()=>{
     gen.focus=b.dataset.focus;
@@ -638,12 +708,13 @@ function wireGenConfig(){
 function renderGenResult(){
   const rows=gen.result;
   const tons=rows.reduce((a,r)=>a+r.sets*r.reps*r.weight,0);
-  const accent = gen.mode==="intensity" ? INTENSITY[gen.intensity].accent : "var(--violet)";
-  const title = gen.mode==="intensity"
-    ? `${INTENSITY[gen.intensity].label} · ${gen.focus}`
-    : ({recent:"Repeat last session",frequent:"Most-frequent lifts",progressive:"Progressive overload"})[gen.histMode];
-  /* show the equipment the engine actually built from (intensity mode only) */
-  const sub = gen.mode==="intensity"
+  const accent = gen.mode==="intensity" ? INTENSITY[gen.intensity].accent
+               : gen.mode==="goal" ? GOALS[gen.goal].accent
+               : "var(--violet)";
+  const title = gen.mode==="intensity" ? `${INTENSITY[gen.intensity].label} · ${gen.focus}`
+               : gen.mode==="goal" ? `${GOALS[gen.goal].label} · ${gen.focus}`
+               : ({recent:"Repeat last session",frequent:"Most-frequent lifts",progressive:"Progressive overload"})[gen.histMode];
+  const sub = (gen.mode==="intensity"||gen.mode==="goal")
     ? `${equipSummary()} · ${rows.length} lift${rows.length===1?"":"s"}`
     : "";
   $("#genResult").innerHTML=`
