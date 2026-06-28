@@ -6,10 +6,6 @@
   <title>DOPAMOVE WEB · Gym Tracker</title>
   <meta name="description" content="A Neo-Brutalist gym tracker — browse a full exercise database, log sessions, track tonnage." />
 
-  <!-- ===== OneSignal Web SDK (v16) =====================================
-       Per https://documentation.onesignal.com/docs/en/web-sdk-setup
-       Requires: HTTPS origin + OneSignalSDKWorker.js at site root +
-       a Web platform configured in the OneSignal dashboard for this App ID. -->
   <link rel="manifest" href="manifest.json" />
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
@@ -17,32 +13,37 @@
     OneSignalDeferred.push(async function (OneSignal) {
       await OneSignal.init({
         appId: "aadfb631-db03-4f50-83d0-f4054f63d307",
-        allowLocalhostAsSecureOrigin: true,   // lets you test on http://localhost
+        allowLocalhostAsSecureOrigin: true,
       });
     });
   </script>
-  <!-- =================================================================== -->
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <noscript>
+    <style>#cover{display:none!important}.cover-open{overflow:auto!important}</style>
+  </noscript>
 </head>
 <body class="cover-open">
 
-  <!-- ===================== COVER / SPLASH ===================== -->
+  <noscript>
+    <p style="padding:18px;font-family:monospace">DOPAMOVE WEB needs JavaScript enabled to run.</p>
+  </noscript>
+
   <div id="cover" class="cover">
     <div class="cover-inner">
-      <div class="cover-mark">IL</div>
+      <div class="cover-mark">DW</div>
       <h1 class="cover-title">DOPAMOVE WEB</h1>
       <p class="cover-tag mono">LIFT · LOG · REPEAT</p>
-      <p class="cover-lede">A local-first gym tracker. Browse 161 lifts, log every
+      <p class="cover-lede">A local-first gym tracker. Browse <span id="coverLede">0</span> lifts, log every
         session, and let the engine build your next workout from your own history
         — or auto-generate one to a target intensity.</p>
       <div class="cover-stats">
         <div><b id="coverTonnage">0</b><span>kg lifetime</span></div>
         <div><b id="coverSessions">0</b><span>sessions</span></div>
-        <div><b>161</b><span>lifts</span></div>
+        <div><b id="coverLifts">0</b><span>lifts</span></div>
       </div>
       <button class="btn primary cover-enter" id="enterBtn">Enter the ledger →</button>
       <p class="cover-foot mono">Your data never leaves this browser.</p>
@@ -52,7 +53,7 @@
   <header class="top">
     <div class="top-inner">
       <div class="brand">
-        <div class="mark">IL</div>
+        <div class="mark">DW</div>
         <div>
           <h1>DOPAMOVE WEB</h1>
           <small>LIFT · LOG · REPEAT</small>
@@ -76,7 +77,6 @@
       <button class="tab" data-view="safety"   role="tab" aria-selected="false">Safety &amp; Form</button>
     </nav>
 
-    <!-- ========================= DATABASE ========================= -->
     <section class="view active" id="view-database" role="tabpanel">
       <span class="section-eyebrow">The Rack · full exercise library</span>
       <div class="filters">
@@ -91,7 +91,6 @@
       <div class="grid" id="dbGrid"></div>
     </section>
 
-    <!-- ========================= LOG ========================= -->
     <section class="view" id="view-log" role="tabpanel">
       <span class="section-eyebrow">Today's work</span>
       <div class="bell">
@@ -126,7 +125,6 @@
       </div>
     </section>
 
-    <!-- ========================= GENERATE ========================= -->
     <section class="view" id="view-generate" role="tabpanel">
       <span class="section-eyebrow">Workout engine · build your next session</span>
 
@@ -136,7 +134,6 @@
         <li data-step="3">3 · Workout</li>
       </ol>
 
-      <!-- LAYER 1 — choose source -->
       <div class="layer" id="genLayer1">
         <div class="choice-grid">
           <button class="choice" data-mode="history">
@@ -149,14 +146,13 @@
           <button class="choice" data-mode="intensity">
             <span class="choice-k mono">02</span>
             <h3>By intensity</h3>
-            <p>Auto-generate a fresh session from the 161-lift database, dialled to a
+            <p>Auto-generate a fresh session from the <span id="genDbCount">0</span>-lift database, dialled to a
                training intensity and a muscle focus.</p>
             <span class="choice-go">Choose →</span>
           </button>
         </div>
       </div>
 
-      <!-- LAYER 2 — tune (built by JS) -->
       <div class="layer" id="genLayer2" hidden>
         <div class="panel" id="genConfig"></div>
         <div class="savebar">
@@ -165,7 +161,6 @@
         </div>
       </div>
 
-      <!-- LAYER 3 — result -->
       <div class="layer" id="genLayer3" hidden>
         <div id="genResult"></div>
         <div class="savebar">
@@ -176,7 +171,6 @@
       </div>
     </section>
 
-    <!-- ========================= HISTORY ========================= -->
     <section class="view" id="view-history" role="tabpanel">
       <span class="section-eyebrow">The ledger</span>
       <div class="panel summary" style="margin-bottom:20px;display:flex;gap:40px;flex-wrap:wrap">
@@ -192,7 +186,6 @@
       <div class="hist" id="histList"></div>
     </section>
 
-    <!-- ========================= SAFETY ========================= -->
     <section class="view" id="view-safety" role="tabpanel">
       <span class="section-eyebrow">Stay in the game</span>
 
@@ -215,7 +208,7 @@
 
     <footer>
       <span>DOPAMOVE WEB — local-first gym tracker · data stays in your browser</span>
-      <span>EXERCISE DB: 161 LIFTS · 7 GROUPS</span>
+      <span>EXERCISE DB: <span id="footLifts">0</span> LIFTS · <span id="footGroups">0</span> GROUPS</span>
     </footer>
   </div>
 

@@ -1,11 +1,4 @@
-/* =========================================================================
-   DOPAMOVE WEB · LOCAL EXERCISE DATABASE
-   Parsed from "The Ultimate Exercise Encyclopedia".
-   Each row: [name, muscle, group, equipment, focus]
-   ========================================================================= */
-
 const RAW = [
-  /* ---------------- BACK ---------------- */
   ["Pull-Up (Overhand)","Back","Vertical Pull","Bodyweight","Width"],
   ["Chin-Up (Underhand)","Back","Vertical Pull","Bodyweight","Width"],
   ["Neutral Grip Pull-Up","Back","Vertical Pull","Bodyweight","Width"],
@@ -59,7 +52,6 @@ const RAW = [
   ["Cable Shrugs","Back","Traps","Cable","Traps"],
   ["Trap Bar Shrug","Back","Traps","Trap Bar","Traps"],
 
-  /* ---------------- CHEST ---------------- */
   ["Incline Barbell Press","Chest","Upper Chest","Barbell","Clavicular"],
   ["Incline Dumbbell Press","Chest","Upper Chest","Dumbbell","Clavicular"],
   ["Incline Machine Press","Chest","Upper Chest","Machine","Clavicular"],
@@ -91,7 +83,6 @@ const RAW = [
   ["Incline Push-ups","Chest","Lower Chest","Bodyweight","Costal"],
   ["Knee Push-Up","Chest","Middle Chest","Bodyweight","Sternal"],
 
-  /* ---------------- SHOULDERS ---------------- */
   ["Military Press","Shoulders","Front Delts","Barbell","Anterior"],
   ["Seated Shoulder Press (DB)","Shoulders","Front Delts","Dumbbell","Anterior"],
   ["Seated Shoulder Press (Machine)","Shoulders","Front Delts","Machine","Anterior"],
@@ -120,7 +111,6 @@ const RAW = [
   ["Wide-Grip Seated Row","Shoulders","Rear Delts","Cable","Posterior"],
   ["Dumbbell Y-Raise","Shoulders","Rear Delts","Dumbbell","Posterior"],
 
-  /* ---------------- ARMS ---------------- */
   ["Incline Dumbbell Curl","Arms","Biceps","Dumbbell","Long Head"],
   ["High Cable Curl","Arms","Biceps","Cable","Long Head"],
   ["Drag Curl","Arms","Biceps","Barbell","Long Head"],
@@ -156,7 +146,6 @@ const RAW = [
   ["Plate Pinch","Arms","Forearms","Plate","Grip"],
   ["Dead Hangs","Arms","Forearms","Bodyweight","Grip"],
 
-  /* ---------------- LEGS ---------------- */
   ["Back Squat (High Bar)","Legs","Quadriceps","Barbell","Quads"],
   ["Front Squat","Legs","Quadriceps","Barbell","Quads"],
   ["Box Squat","Legs","Quadriceps","Barbell","Quads"],
@@ -222,7 +211,6 @@ const RAW = [
   ["Seated Calf Raise","Legs","Calves","Machine","Soleus"],
   ["Tibialis Raise","Legs","Calves","Bodyweight","Tibialis"],
 
-  /* ---------------- CORE ---------------- */
   ["Hanging Leg Raises","Core","Rectus Abdominis","Bodyweight","Lower"],
   ["Hanging Knee Raises","Core","Rectus Abdominis","Bodyweight","Lower"],
   ["Toes-to-Bar","Core","Rectus Abdominis","Bodyweight","Lower"],
@@ -263,7 +251,6 @@ const RAW = [
   ["Leg Circles","Core","Transverse Abdominis","Bodyweight","Stability"],
   ["Glute Bridge March","Core","Transverse Abdominis","Bodyweight","Stability"],
 
-  /* ---------------- FUNCTIONAL ---------------- */
   ["Turkish Get-Up","Functional","Kettlebell","Kettlebell","Total Body"],
   ["Kettlebell Swing","Functional","Kettlebell","Kettlebell","Posterior Power"],
   ["Kettlebell Snatch","Functional","Kettlebell","Kettlebell","Vertical Power"],
@@ -305,7 +292,6 @@ const EXERCISES = RAW.map((r, i) => ({
 const MUSCLES = ["Back","Chest","Shoulders","Arms","Legs","Core","Functional"];
 const EQUIPMENT = [...new Set(EXERCISES.map(e => e.equipment))].sort();
 
-/* Per-muscle accent so the database reads like a colour-coded rack */
 const MUSCLE_COLOR = {
   Back:"var(--blue)",
   Chest:"var(--coral)",
@@ -315,10 +301,6 @@ const MUSCLE_COLOR = {
   Core:"var(--orange)",
   Functional:"var(--ink)",
 };
-
-/* =========================================================================
-   SAFETY & FORM  ·  Parsed from "Gym Safety & Form Correction Guide"
-   ========================================================================= */
 
 const INJURIES = [
   {

@@ -1,6 +1,3 @@
-/* =========================================================================
-   DOPAMOVE WEB · Neo-Brutalist styles
-   ========================================================================= */
 :root{
   --paper:#F3EEE1;
   --ink:#15120C;
@@ -23,7 +20,6 @@ body{
   font-family:"Space Grotesk",system-ui,sans-serif;
   background:var(--paper);
   color:var(--ink);
-  /* constructed grid — brutalist scaffolding, not decoration */
   background-image:
     linear-gradient(rgba(21,18,12,.05) 1px,transparent 1px),
     linear-gradient(90deg,rgba(21,18,12,.05) 1px,transparent 1px);
@@ -36,10 +32,8 @@ h1,h2,h3,.display{font-family:"Archivo Black",system-ui,sans-serif;letter-spacin
 button{font-family:inherit;cursor:pointer}
 a{color:inherit}
 
-/* ---------- shell ---------- */
 .wrap{max-width:1180px;margin:0 auto;padding:0 18px 120px}
 
-/* ---------- top bar ---------- */
 header.top{
   position:sticky;top:0;z-index:40;
   background:var(--ink);color:var(--paper);
@@ -56,7 +50,6 @@ header.top{
 .brand small{display:block;font-size:10px;letter-spacing:.32em;color:var(--lime);margin-top:2px;font-family:"Space Mono"}
 .top-spacer{flex:1}
 
-/* tonnage odometer — the signature element */
 .tonnage{
   display:flex;align-items:baseline;gap:8px;background:var(--paper);color:var(--ink);
   border:3px solid var(--paper);padding:6px 12px;box-shadow:4px 4px 0 var(--lime);
@@ -65,7 +58,6 @@ header.top{
 .tonnage .num{font-family:"Space Mono";font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
 .tonnage .unit{font-family:"Space Mono";font-size:11px}
 
-/* ---------- nav tabs ---------- */
 nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
 .tab{
   background:var(--paper);border:var(--bd);box-shadow:var(--sh-sm);
@@ -77,7 +69,6 @@ nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
 .tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
 .tab[aria-selected="true"]:hover{box-shadow:6px 6px 0 var(--coral)}
 
-/* ---------- generic panels / cards ---------- */
 .panel{background:var(--paper);border:var(--bd);box-shadow:var(--sh);padding:22px}
 .section-eyebrow{font-family:"Space Mono";font-size:11px;letter-spacing:.3em;text-transform:uppercase;display:inline-block;
   background:var(--ink);color:var(--paper);padding:4px 10px;margin-bottom:12px}
@@ -85,7 +76,6 @@ nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
 .view.active{display:block}
 @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-/* ---------- filter bar ---------- */
 .filters{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
 .search{flex:1;min-width:220px}
 .search input{
@@ -103,7 +93,6 @@ nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
 .chip.m[data-on="true"]{background:var(--ink);color:var(--paper)}
 .countpill{font-family:"Space Mono";font-size:12px;background:var(--lime);border:var(--bd);padding:8px 12px;box-shadow:3px 3px 0 var(--ink);align-self:center}
 
-/* ---------- exercise grid ---------- */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:16px}
 .ex{
   position:relative;background:var(--paper);border:var(--bd);box-shadow:var(--sh);padding:16px 16px 14px;
@@ -126,7 +115,6 @@ nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
 .ex .addbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .empty{font-family:"Space Mono";padding:40px;text-align:center;border:3px dashed var(--ink);grid-column:1/-1}
 
-/* ---------- workout logger ---------- */
 .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:20px}
 @media(max-width:860px){.two-col{grid-template-columns:1fr}.two-col .right{order:-1}}
 .log-row{
@@ -154,12 +142,10 @@ nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
 .btn:disabled{opacity:.4;pointer-events:none}
 .datechip input{border:var(--bd);background:var(--paper);padding:11px;font-family:"Space Mono";font-size:14px;box-shadow:var(--sh-sm)}
 
-/* ---------- session summary side ---------- */
 .summary .stat{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px dashed var(--ink);padding:10px 0}
 .summary .stat b{font-family:"Space Mono";font-size:24px}
 .summary .stat span{font-family:"Space Mono";font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
 
-/* ---------- history ---------- */
 .hist{display:flex;flex-direction:column;gap:14px}
 .session{border:var(--bd);background:var(--paper);box-shadow:var(--sh);padding:16px}
 .session .shead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:var(--bd);padding-bottom:10px;margin-bottom:10px}
@@ -169,7 +155,6 @@ nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
 .session li{display:flex;justify-content:space-between;font-family:"Space Mono";font-size:13px;border-bottom:1px dotted var(--ink);padding-bottom:5px}
 .session li span:last-child{opacity:.8}
 
-/* ---------- safety ---------- */
 .acc{border:var(--bd);box-shadow:var(--sh);margin-bottom:14px;background:var(--paper)}
 .acc>button{width:100%;text-align:left;background:var(--paper);border:none;border-bottom:var(--bd);padding:16px 18px;
   font-family:"Archivo Black";font-size:18px;display:flex;justify-content:space-between;align-items:center}
@@ -189,13 +174,11 @@ table.brut td:last-child,table.brut th:last-child{border-right:none}
 table.brut .flag{background:#ffe3df}
 .scrollx{overflow-x:auto;margin-bottom:20px}
 
-/* ---------- push / reminders card ---------- */
 .bell{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:var(--violet);border:var(--bd);box-shadow:var(--sh);padding:18px;margin-bottom:22px}
 .bell .big{font-family:"Archivo Black";font-size:20px;flex:1;min-width:200px}
 .bell .sub{font-family:"Space Mono";font-size:12px;display:block;margin-top:4px;font-weight:400}
 .bell .status{font-family:"Space Mono";font-size:11px;border:2px solid var(--ink);padding:4px 9px;background:var(--paper)}
 
-/* ---------- toast ---------- */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(140px);z-index:90;
   background:var(--ink);color:var(--paper);border:3px solid var(--lime);box-shadow:var(--sh);padding:13px 20px;
   font-weight:700;transition:transform .25s cubic-bezier(.2,1.3,.5,1);max-width:90vw}
@@ -203,7 +186,6 @@ table.brut .flag{background:#ffe3df}
 
 footer{margin-top:40px;border-top:4px solid var(--ink);padding:20px 0;font-family:"Space Mono";font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 
-/* ---------- cover / splash ---------- */
 .cover-open{overflow:hidden}
 .cover{
   position:fixed;inset:0;z-index:100;background:var(--ink);color:var(--paper);
@@ -231,7 +213,6 @@ footer{margin-top:40px;border-top:4px solid var(--ink);padding:20px 0;font-famil
 .cover-enter{font-size:18px;padding:16px 34px}
 .cover-foot{margin-top:18px;font-size:11px;letter-spacing:.2em;opacity:.6}
 
-/* ---------- generate / workout engine ---------- */
 .stepper{display:flex;gap:10px;flex-wrap:wrap;list-style:none;margin-bottom:22px}
 .stepper li{
   font-family:"Space Mono";font-size:12px;letter-spacing:.06em;text-transform:uppercase;

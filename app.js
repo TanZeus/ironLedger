@@ -1,15 +1,13 @@
-/* =========================================================================
-   DOPAMOVE WEB · app logic (vanilla JS, no build step)
-   ========================================================================= */
 const $  = (s,el=document)=>el.querySelector(s);
 const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
 const STORE = "ironledger.v1";
 const DRAFT_STORE = "ironledger.draft.v1";
 
-/* ---------- persistence ----------
-   localStorage can be unavailable (private mode) or full (quota). We probe
-   once, and every write reports success so the UI can warn instead of
-   silently losing a workout. */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => (
+  {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]
+));
+const num = v => Number.isFinite(+v) ? +v : 0;
+
 function storageAvailable(){
   try{
     const k="__ironledger_probe__";
@@ -26,22 +24,22 @@ function save(d){
 }
 let DB = load();
 
-/* current draft session: [{id,name,muscle,equipment,sets,reps,weight}].
-   Persisted on every change so a refresh or crash mid-workout doesn't lose it. */
 function loadDraft(){ try{ return JSON.parse(localStorage.getItem(DRAFT_STORE)) || []; }catch{ return []; } }
 function saveDraft(){ try{ localStorage.setItem(DRAFT_STORE, JSON.stringify(draft)); }catch{} }
 let draft = loadDraft();
 
-/* ---------- toast ---------- */
 let toastT;
 function toast(msg){
   const t=$("#toast"); t.textContent=msg; t.classList.add("show");
   clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200);
 }
 
-/* ---------- tonnage (signature counter) ---------- */
+function sessionTonnage(s){
+  if(Number.isFinite(+s?.tonnage)) return +s.tonnage;
+  return (s?.items||[]).reduce((a,it)=>a+num(it.sets)*num(it.reps)*num(it.weight),0);
+}
 function totalTonnage(){
-  return DB.sessions.reduce((a,s)=>a+s.tonnage,0);
+  return DB.sessions.reduce((a,s)=>a+sessionTonnage(s),0);
 }
 function animateTonnage(toVal){
   const el=$("#tonnageNum"); const from=Number(el.dataset.v||0); const start=performance.now(); const dur=600;
@@ -55,18 +53,15 @@ function animateTonnage(toVal){
   requestAnimationFrame(step);
 }
 
-/* =========================================================================
-   VIEW: DATABASE
-   ========================================================================= */
 let activeMuscle="All", activeEquip="All", query="";
 
 function buildFilters(){
   const mrow=$("#muscleChips");
   mrow.innerHTML = ["All",...MUSCLES].map(m=>
-    `<button class="chip m" data-m="${m}" data-on="${m==='All'}">${m}</button>`).join("");
+    `<button class="chip m" data-m="${esc(m)}" data-on="${m==='All'}">${esc(m)}</button>`).join("");
   const erow=$("#equipChips");
   erow.innerHTML = ["All",...EQUIPMENT].map(e=>
-    `<button class="chip" data-e="${e}" data-on="${e==='All'}">${e}</button>`).join("");
+    `<button class="chip" data-e="${esc(e)}" data-on="${e==='All'}">${esc(e)}</button>`).join("");
 
   mrow.addEventListener("click",e=>{
     const b=e.target.closest(".chip"); if(!b)return;
@@ -94,21 +89,18 @@ function renderDB(){
   if(!list.length){ grid.innerHTML=`<div class="empty">No lifts match that filter. Loosen the search.</div>`; return; }
   grid.innerHTML = list.map(x=>`
     <article class="ex">
-      <span class="tag-muscle" style="background:${MUSCLE_COLOR[x.muscle]}">${x.muscle}</span>
-      <h3>${x.name}</h3>
+      <span class="tag-muscle" style="background:${MUSCLE_COLOR[x.muscle]}">${esc(x.muscle)}</span>
+      <h3>${esc(x.name)}</h3>
       <div class="meta">
-        <span>${x.group}</span>
-        <span>${x.focus}</span>
-        <span class="equip">${x.equipment}</span>
+        <span>${esc(x.group)}</span>
+        <span>${esc(x.focus)}</span>
+        <span class="equip">${esc(x.equipment)}</span>
       </div>
       <button class="addbtn" data-add="${x.id}">+ Add to session</button>
     </article>`).join("");
   $$("[data-add]",grid).forEach(b=>b.onclick=()=>addToDraft(+b.dataset.add));
 }
 
-/* =========================================================================
-   VIEW: LOGGER
-   ========================================================================= */
 function addToDraft(id){
   const x=EXERCISES.find(e=>e.id===id); if(!x)return;
   draft.push({id:x.id,name:x.name,muscle:x.muscle,equipment:x.equipment,sets:3,reps:10,weight:20});
@@ -124,10 +116,10 @@ function renderDraft(){
   } else {
     box.innerHTML = draft.map((r,i)=>`
       <div class="log-row">
-        <div class="lr-name">${r.name}<small>${r.muscle} · ${r.equipment}</small></div>
-        <label><span class="field-lbl">Sets</span><input type="number" min="0" value="${r.sets}" data-i="${i}" data-k="sets"></label>
-        <label><span class="field-lbl">Reps</span><input type="number" min="0" value="${r.reps}" data-i="${i}" data-k="reps"></label>
-        <label><span class="field-lbl">Kg</span><input type="number" min="0" step="0.5" value="${r.weight}" data-i="${i}" data-k="weight"></label>
+        <div class="lr-name">${esc(r.name)}<small>${esc(r.muscle)} · ${esc(r.equipment)}</small></div>
+        <label><span class="field-lbl">Sets</span><input type="number" min="0" value="${num(r.sets)}" data-i="${i}" data-k="sets"></label>
+        <label><span class="field-lbl">Reps</span><input type="number" min="0" value="${num(r.reps)}" data-i="${i}" data-k="reps"></label>
+        <label><span class="field-lbl">Kg</span><input type="number" min="0" step="0.5" value="${num(r.weight)}" data-i="${i}" data-k="weight"></label>
         <button class="del" data-del="${i}" title="Remove">×</button>
       </div>`).join("");
     $$("#logRows input").forEach(inp=>inp.oninput=()=>{
@@ -146,7 +138,7 @@ function renderSummary(){
   $("#sumSets").textContent=sets;
   $("#sumTons").textContent=tons.toLocaleString();
   $("#saveBtn").disabled = lifts===0;
-  saveDraft();   // persist in-progress work so a refresh doesn't lose it
+  saveDraft();
 }
 
 function saveSession(){
@@ -167,15 +159,11 @@ function saveSession(){
     ? `Session saved · ${tonnage.toLocaleString()} kg moved`
     : "⚠ Couldn't save to this browser — export a backup to keep this!");
 
-  /* tag the user in OneSignal so workout-streak segments are possible */
   pushTag("sessions_logged", String(DB.sessions.length));
   pushTag("last_workout", date);
   switchView("history");
 }
 
-/* =========================================================================
-   VIEW: HISTORY
-   ========================================================================= */
 function renderHistory(){
   const box=$("#histList");
   if(!DB.sessions.length){
@@ -188,11 +176,11 @@ function renderHistory(){
   box.innerHTML = DB.sessions.map(s=>`
     <div class="session">
       <div class="shead">
-        <span class="sdate">${fmtDate(s.date)}</span>
-        <span class="stons">${s.tonnage.toLocaleString()} kg moved</span>
+        <span class="sdate">${esc(fmtDate(s.date))}</span>
+        <span class="stons">${sessionTonnage(s).toLocaleString()} kg moved</span>
         <button class="del" data-rm="${s.id}" title="Delete session">×</button>
       </div>
-      <ul>${s.items.map(it=>`<li><span>${it.name}</span><span>${it.sets}×${it.reps} @ ${it.weight}kg</span></li>`).join("")}</ul>
+      <ul>${(s.items||[]).map(it=>`<li><span>${esc(it.name)}</span><span>${num(it.sets)}×${num(it.reps)} @ ${num(it.weight)}kg</span></li>`).join("")}</ul>
     </div>`).join("");
   $$("#histList .del").forEach(b=>b.onclick=()=>{
     DB.sessions=DB.sessions.filter(s=>s.id!=+b.dataset.rm);
@@ -201,20 +189,17 @@ function renderHistory(){
 }
 function fmtDate(iso){
   const d=new Date(iso+"T00:00:00");
-  if(isNaN(d)) return iso;
+  if(isNaN(d.getTime())) return iso;
   return d.toLocaleDateString(undefined,{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
 }
 
-/* =========================================================================
-   BACKUP: export / import  (so data survives a cleared cache or new browser)
-   ========================================================================= */
 function exportData(){
   try{
     const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;
-    a.download=`ironledger-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.download=`dopamove-backup-${new Date().toISOString().slice(0,10)}.json`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
     toast(`Backup downloaded · ${DB.sessions.length} sessions`);
@@ -227,9 +212,10 @@ function importData(file){
     try{
       const parsed=JSON.parse(reader.result);
       if(!parsed || !Array.isArray(parsed.sessions)) throw new Error("not a Dopamove Web backup");
-      /* merge with what's already here, de-duping by session id */
       const byId=new Map();
-      [...DB.sessions,...parsed.sessions].forEach(s=>{ if(s && s.id!=null) byId.set(s.id,s); });
+      [...DB.sessions,...parsed.sessions].forEach(s=>{
+        if(s && s.id!=null){ s.tonnage=sessionTonnage(s); byId.set(s.id,s); }
+      });
       DB.sessions=[...byId.values()].sort((a,b)=>b.id-a.id);
       save(DB);
       renderHistory();
@@ -241,45 +227,39 @@ function importData(file){
   reader.readAsText(file);
 }
 
-/* =========================================================================
-   VIEW: SAFETY
-   ========================================================================= */
 function renderSafety(){
   $("#injuries").innerHTML = INJURIES.map((inj,i)=>`
     <div class="acc" data-open="${i===0}">
-      <button data-acc>${inj.area}<span class="mono">${i===0?'–':'+'}</span></button>
+      <button data-acc aria-expanded="${i===0}">${esc(inj.area)}<span class="mono">${i===0?'–':'+'}</span></button>
       <div class="body">
-        <p>${inj.issue}</p>
+        <p>${esc(inj.issue)}</p>
         <strong class="mono" style="font-size:11px;letter-spacing:.15em">PREVENTION</strong>
-        <ul>${inj.prevention.map(p=>`<li>${p}</li>`).join("")}</ul>
-        <div class="tip">${inj.tip}</div>
+        <ul>${inj.prevention.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>
+        <div class="tip">${esc(inj.tip)}</div>
       </div>
     </div>`).join("");
   $$("#injuries [data-acc]").forEach(b=>b.onclick=()=>{
     const acc=b.parentElement; const open=acc.dataset.open==="true";
     acc.dataset.open=String(!open);
+    b.setAttribute("aria-expanded", String(!open));
     b.querySelector(".mono").textContent = open?"+":"–";
   });
 
   $("#redFlags").innerHTML = `
     <thead><tr><th>Symptom</th><th>Likely DOMS — keep training</th><th>Red flag — stop & see a pro</th></tr></thead>
-    <tbody>${RED_FLAGS.map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td><td class="flag">${r[2]}</td></tr>`).join("")}</tbody>`;
+    <tbody>${RED_FLAGS.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td><td class="flag">${esc(r[2])}</td></tr>`).join("")}</tbody>`;
 
-  $("#seePro").innerHTML = SEE_PRO.map(s=>`<li>${s}</li>`).join("");
+  $("#seePro").innerHTML = SEE_PRO.map(s=>`<li>${esc(s)}</li>`).join("");
 
   $("#cues").innerHTML = `
     <thead><tr><th>Exercise</th><th>Common error</th><th>External cue (fix)</th></tr></thead>
-    <tbody>${CUES.map(c=>`<tr><th>${c[0]}</th><td>${c[1]}</td><td>${c[2]}</td></tr>`).join("")}</tbody>`;
+    <tbody>${CUES.map(c=>`<tr><th>${esc(c[0])}</th><td>${esc(c[1])}</td><td>${esc(c[2])}</td></tr>`).join("")}</tbody>`;
 
-  $("#brace").innerHTML = BRACE.map((b,i)=>`<li><span>${b}</span><span class="mono">0${i+1}</span></li>`).join("");
+  $("#brace").innerHTML = BRACE.map((b,i)=>`<li><span>${esc(b)}</span><span class="mono">0${i+1}</span></li>`).join("");
 }
 
-/* =========================================================================
-   VIEW: GENERATE  ·  workout engine (history-based + intensity-based)
-   ========================================================================= */
 let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", result:[] };
 
-/* intensity profiles — sets/reps and load as a fraction of a working max */
 const INTENSITY = {
   deload:       {label:"Deload",       sets:2, reps:14, load:0.60, accent:"var(--blue)",   note:"Recovery — light, clean reps to flush volume without taxing you."},
   hypertrophy:  {label:"Hypertrophy",  sets:4, reps:10, load:0.75, accent:"var(--lime)",   note:"Muscle growth — moderate load in the classic 8–12 rep range."},
@@ -287,7 +267,6 @@ const INTENSITY = {
   conditioning: {label:"Conditioning", sets:3, reps:18, load:0.50, accent:"var(--orange)", note:"High-rep, short-rest pump work to build work capacity."},
 };
 
-/* roll up every logged item by exercise name */
 function historyIndex(){
   const map=new Map();
   DB.sessions.forEach(s=>{
@@ -303,7 +282,6 @@ function historyIndex(){
   return map;
 }
 
-/* a sensible starting weight when there's no history for a lift */
 function baselineWeight(ex){
   const eq=(ex.equipment||"").toLowerCase();
   if(/body|none/.test(eq)) return 0;
@@ -325,7 +303,6 @@ function genFromIntensity(){
   const idx=historyIndex();
   let picks;
   if(gen.focus==="Full body"){
-    /* round-robin one lift per muscle group for balance */
     const byMuscle={}; MUSCLES.forEach(m=>byMuscle[m]=shuffle(EXERCISES.filter(e=>e.muscle===m)));
     picks=[]; let mi=0, guard=0;
     while(picks.length<gen.count && guard++<400){
@@ -384,21 +361,21 @@ function generate(){
 function renderGenConfig(){
   const box=$("#genConfig");
   const focusChips = ["Full body",...MUSCLES].map(m=>
-    `<button class="chip${m!=="Full body"?" m":""}" data-focus="${m}" data-on="${m===gen.focus}">${m}</button>`).join("");
+    `<button class="chip${m!=="Full body"?" m":""}" data-focus="${esc(m)}" data-on="${m===gen.focus}">${esc(m)}</button>`).join("");
   const countBlock = `
     <span class="section-eyebrow" style="margin-top:18px">Exercises</span>
     <div class="count-row">
-      <input type="range" id="genCount" min="3" max="10" value="${gen.count}">
+      <input type="range" id="genCount" min="3" max="10" value="${gen.count}" aria-label="Number of exercises">
       <b class="mono" id="genCountVal">${gen.count}</b>
     </div>`;
 
   if(gen.mode==="intensity"){
     const intens=Object.entries(INTENSITY).map(([k,v])=>
-      `<button class="chip" data-intensity="${k}" data-on="${k===gen.intensity}">${v.label}</button>`).join("");
+      `<button class="chip" data-intensity="${esc(k)}" data-on="${k===gen.intensity}">${esc(v.label)}</button>`).join("");
     box.innerHTML=`
       <span class="section-eyebrow">Intensity</span>
       <div class="chip-row">${intens}</div>
-      <p class="cfg-note" id="intNote">${INTENSITY[gen.intensity].note}</p>
+      <p class="cfg-note" id="intNote">${esc(INTENSITY[gen.intensity].note)}</p>
       <span class="section-eyebrow" style="margin-top:18px">Focus</span>
       <div class="chip-row">${focusChips}</div>
       ${countBlock}`;
@@ -413,7 +390,7 @@ function renderGenConfig(){
       <span class="section-eyebrow">Method</span>
       <div class="hmode-grid">
         ${modes.map(([k,t,d])=>`
-          <button class="hmode" data-hmode="${k}" data-on="${k===gen.histMode}"><b>${t}</b><span>${d}</span></button>`).join("")}
+          <button class="hmode" data-hmode="${esc(k)}" data-on="${k===gen.histMode}"><b>${esc(t)}</b><span>${esc(d)}</span></button>`).join("")}
       </div>
       <div id="histExtra" ${gen.histMode==="recent"?"hidden":""}>
         <span class="section-eyebrow" style="margin-top:18px">Focus</span>
@@ -453,14 +430,14 @@ function renderGenResult(){
     : ({recent:"Repeat last session",frequent:"Most-frequent lifts",progressive:"Progressive overload"})[gen.histMode];
   $("#genResult").innerHTML=`
     <div class="gen-head" style="box-shadow:6px 6px 0 ${accent}">
-      <div><span class="section-eyebrow">Generated workout</span><h3>${title}</h3></div>
+      <div><span class="section-eyebrow">Generated workout</span><h3>${esc(title)}</h3></div>
       <div class="gen-tot"><b>${tons.toLocaleString()}</b><span>kg planned</span></div>
     </div>
     <div class="gen-list">
       ${rows.map((r,i)=>`
         <div class="gen-row">
           <span class="gen-n mono">${String(i+1).padStart(2,"0")}</span>
-          <div class="gen-name">${r.name}<small>${r.muscle}${r.why?` · ${r.why}`:""}</small></div>
+          <div class="gen-name">${esc(r.name)}<small>${esc(r.muscle)}${r.why?` · ${esc(r.why)}`:""}</small></div>
           <span class="gen-presc mono">${r.sets} × ${r.reps} @ ${r.weight}kg</span>
         </div>`).join("")}
     </div>`;
@@ -481,18 +458,12 @@ function showLayer(n){
   $$("#genSteps li").forEach(li=>li.dataset.on=(+li.dataset.step<=n));
 }
 
-/* =========================================================================
-   TAB ROUTING
-   ========================================================================= */
 function switchView(name){
   $$(".tab").forEach(t=>t.setAttribute("aria-selected", String(t.dataset.view===name)));
   $$(".view").forEach(v=>v.classList.toggle("active", v.id===`view-${name}`));
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
-/* =========================================================================
-   ONESIGNAL HOOKS  (SDK is initialised in index.html <head>)
-   ========================================================================= */
 function osReady(cb){
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   window.OneSignalDeferred.push(cb);
@@ -511,7 +482,7 @@ function refreshBellStatus(){
 function enableReminders(){
   osReady(async OneSignal=>{
     try{
-      await OneSignal.Slidedown.promptPush();           // shows the OneSignal prompt
+      await OneSignal.Slidedown.promptPush();
       await OneSignal.User.addTag("app","ironledger");
       refreshBellStatus();
       toast("Browser will ask for notification permission.");
@@ -522,12 +493,15 @@ function enableReminders(){
   });
 }
 
-/* =========================================================================
-   INIT
-   ========================================================================= */
 function init(){
-  // default session date = today
   $("#sessDate").value = new Date().toISOString().slice(0,10);
+
+  const liftCount = EXERCISES.length;
+  $("#coverLede").textContent = liftCount;
+  $("#coverLifts").textContent = liftCount;
+  $("#genDbCount").textContent = liftCount;
+  $("#footLifts").textContent = liftCount;
+  $("#footGroups").textContent = MUSCLES.length;
 
   buildFilters();
   renderDB();
@@ -540,12 +514,10 @@ function init(){
   $("#clearBtn").onclick=()=>{ if(draft.length){ draft=[]; renderDraft(); toast("Session cleared."); } };
   $("#bellBtn").onclick=enableReminders;
 
-  /* backup controls */
   $("#exportBtn").onclick=exportData;
   $("#importBtn").onclick=()=>$("#importFile").click();
   $("#importFile").onchange=e=>{ const f=e.target.files[0]; if(f){ importData(f); e.target.value=""; } };
 
-  /* cover / splash */
   $("#coverTonnage").textContent=totalTonnage().toLocaleString();
   $("#coverSessions").textContent=DB.sessions.length;
   $("#enterBtn").onclick=()=>{
@@ -553,7 +525,6 @@ function init(){
     document.body.classList.remove("cover-open");
   };
 
-  /* workout engine (layered: source → tune → workout) */
   $$("#genLayer1 .choice").forEach(b=>b.onclick=()=>{
     gen.mode=b.dataset.mode;
     if(gen.mode==="history") gen.histMode="recent";

@@ -1,6 +1,6 @@
 # DOPAMOVE WEB — Neo-Brutalist Gym Tracker
 
-A local-first gym tracker. Open on a **cover page**, browse a 161-lift exercise
+A local-first gym tracker. Open on a **cover page**, browse a 273-lift exercise
 database (parsed from your encyclopedia), log sessions, **auto-generate your next
 workout**, track lifetime tonnage, and read a safety/form guide. Push reminders
 are wired through the **OneSignal Web SDK (v16)**.
@@ -23,7 +23,7 @@ can load straight into the logger:
 ```
 index.html            Main page — OneSignal SDK is initialised in <head>
 styles.css            Neo-Brutalist styles
-data.js               Exercise DB (161 lifts) + safety/form content
+data.js               Exercise DB (273 lifts) + safety/form content
 app.js                Browser, logger, history, safety, OneSignal hooks
 OneSignalSDKWorker.js  Service worker — MUST sit at the site root
 manifest.json         Web app manifest (needed for iOS 16.4+ web push)
