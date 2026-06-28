@@ -15,9 +15,12 @@ can load straight into the logger:
 - **From your history** — *repeat your last session*, your *most-frequent lifts*,
   or *progressive overload* (+2.5% on each lift's last load).
 - **By intensity** — auto-generate from the full database, dialled to a training
-  intensity (**Deload / Hypertrophy / Strength / Conditioning**) and a muscle
-  focus. Weights are scaled from your logged bests when you've trained the lift,
-  or sensible equipment baselines otherwise.
+  intensity (**Deload / Hypertrophy / Strength / Conditioning**), a muscle
+  focus, and **the equipment you actually have**. Tick the gear in your
+  home gym or commercial setup and the engine only builds from lifts you can
+  do; your selection is remembered between visits. Weights are scaled from your
+  logged bests when you've trained the lift, or sensible equipment baselines
+  otherwise.
 
 ## Files
 ```

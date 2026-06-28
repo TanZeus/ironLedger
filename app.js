@@ -5,6 +5,7 @@ const $  = (s,el=document)=>el.querySelector(s);
 const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
 const STORE = "ironledger.v1";
 const DRAFT_STORE = "ironledger.draft.v1";
+const EQUIP_STORE = "ironledger.equipment.v1";
 
 /* ---------- persistence ----------
    localStorage can be unavailable (private mode) or full (quota). We probe
@@ -277,7 +278,21 @@ function renderSafety(){
 /* =========================================================================
    VIEW: GENERATE  ·  workout engine (history-based + intensity-based)
    ========================================================================= */
-let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", result:[] };
+/* Which equipment the lifter actually has. Persisted so the engine remembers
+   your home/gym setup between visits. Defaults to "everything available". */
+function loadEquip(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(EQUIP_STORE));
+    if(Array.isArray(saved)){
+      const valid=saved.filter(e=>EQUIPMENT.includes(e));
+      if(valid.length) return new Set(valid);
+    }
+  }catch{}
+  return new Set(EQUIPMENT);
+}
+function saveEquip(set){ try{ localStorage.setItem(EQUIP_STORE, JSON.stringify([...set])); }catch{} }
+
+let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", equipment:loadEquip(), result:[] };
 
 /* intensity profiles — sets/reps and load as a fraction of a working max */
 const INTENSITY = {
@@ -323,18 +338,23 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=(Math.random()*(i+1)
 function genFromIntensity(){
   const p=INTENSITY[gen.intensity];
   const idx=historyIndex();
+  /* only build from gear the lifter actually has; fall back to everything if
+     nothing is selected so we never hand back an empty workout */
+  const haveAll = gen.equipment.size===0 || gen.equipment.size===EQUIPMENT.length;
+  const owned = ex => haveAll || gen.equipment.has(ex.equipment);
   let picks;
   if(gen.focus==="Full body"){
     /* round-robin one lift per muscle group for balance */
-    const byMuscle={}; MUSCLES.forEach(m=>byMuscle[m]=shuffle(EXERCISES.filter(e=>e.muscle===m)));
+    const byMuscle={}; MUSCLES.forEach(m=>byMuscle[m]=shuffle(EXERCISES.filter(e=>e.muscle===m && owned(e))));
+    const muscles=MUSCLES.filter(m=>byMuscle[m].length);
     picks=[]; let mi=0, guard=0;
-    while(picks.length<gen.count && guard++<400){
-      const arr=byMuscle[MUSCLES[mi++%MUSCLES.length]];
+    while(picks.length<gen.count && muscles.length && guard++<400){
+      const arr=byMuscle[muscles[mi++%muscles.length]];
       if(arr&&arr.length) picks.push(arr.pop());
     }
   } else {
-    let pool=EXERCISES.filter(e=>e.muscle===gen.focus);
-    if(!pool.length) pool=EXERCISES.slice();
+    let pool=EXERCISES.filter(e=>e.muscle===gen.focus && owned(e));
+    if(!pool.length) pool=EXERCISES.filter(owned);
     picks=shuffle(pool).slice(0,gen.count);
   }
   return picks.map(ex=>{
@@ -381,6 +401,14 @@ function generate(){
   showLayer(3);
 }
 
+/* how many lifts the current equipment selection unlocks */
+function equipNoteText(){
+  if(gen.equipment.size===0) return "No equipment selected — pick what you've got, or the engine falls back to the full library.";
+  const n=EXERCISES.filter(e=>gen.equipment.has(e.equipment)).length;
+  if(gen.equipment.size===EQUIPMENT.length) return `Using everything — all ${n} lifts in play.`;
+  return `${n} lift${n===1?"":"s"} available with your ${gen.equipment.size} selected item${gen.equipment.size===1?"":"s"}.`;
+}
+
 function renderGenConfig(){
   const box=$("#genConfig");
   const focusChips = ["Full body",...MUSCLES].map(m=>
@@ -395,10 +423,21 @@ function renderGenConfig(){
   if(gen.mode==="intensity"){
     const intens=Object.entries(INTENSITY).map(([k,v])=>
       `<button class="chip" data-intensity="${k}" data-on="${k===gen.intensity}">${v.label}</button>`).join("");
+    const equipChips=EQUIPMENT.map(e=>
+      `<button class="chip" data-equip="${e}" data-on="${gen.equipment.has(e)}">${e}</button>`).join("");
     box.innerHTML=`
       <span class="section-eyebrow">Intensity</span>
       <div class="chip-row">${intens}</div>
       <p class="cfg-note" id="intNote">${INTENSITY[gen.intensity].note}</p>
+      <div class="equip-head" style="margin-top:18px">
+        <span class="section-eyebrow" style="margin-bottom:0">Equipment you have</span>
+        <span class="equip-tools">
+          <button class="linkbtn" data-equip-all>All</button>
+          <button class="linkbtn" data-equip-none>None</button>
+        </span>
+      </div>
+      <div class="chip-row" id="equipPick" style="margin-top:10px">${equipChips}</div>
+      <p class="cfg-note" id="equipNote">${equipNoteText()}</p>
       <span class="section-eyebrow" style="margin-top:18px">Focus</span>
       <div class="chip-row">${focusChips}</div>
       ${countBlock}`;
@@ -435,6 +474,21 @@ function wireGenConfig(){
     gen.focus=b.dataset.focus;
     $$("[data-focus]",box).forEach(c=>c.dataset.on=(c.dataset.focus===gen.focus));
   });
+  /* equipment: toggle individual chips, or bulk All / None */
+  const syncEquip=()=>{
+    $$("[data-equip]",box).forEach(c=>c.dataset.on=gen.equipment.has(c.dataset.equip));
+    const note=$("#equipNote"); if(note) note.textContent=equipNoteText();
+    saveEquip(gen.equipment);
+  };
+  $$("[data-equip]",box).forEach(b=>b.onclick=()=>{
+    const e=b.dataset.equip;
+    gen.equipment.has(e) ? gen.equipment.delete(e) : gen.equipment.add(e);
+    syncEquip();
+  });
+  const allBtn=$("[data-equip-all]",box);
+  if(allBtn) allBtn.onclick=()=>{ gen.equipment=new Set(EQUIPMENT); syncEquip(); };
+  const noneBtn=$("[data-equip-none]",box);
+  if(noneBtn) noneBtn.onclick=()=>{ gen.equipment.clear(); syncEquip(); };
   $$("[data-hmode]",box).forEach(b=>b.onclick=()=>{
     gen.histMode=b.dataset.hmode;
     $$("[data-hmode]",box).forEach(c=>c.dataset.on=(c.dataset.hmode===gen.histMode));
