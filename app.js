@@ -542,11 +542,10 @@ function genFromHistory(){
     });
   }
   let ranked=[...idx.values()].sort((a,b)=>b.count-a.count || b.lastSeen-a.lastSeen);
+  if(gen.focus!=="Cardio") ranked=ranked.filter(r=>r.muscle!=="Cardio");
   if(gen.focus!=="Full body"){
     const f=ranked.filter(r=>r.muscle===gen.focus);
     if(f.length) ranked=f;
-  } else {
-    ranked=ranked.filter(r=>r.muscle!=="Cardio");
   }
   return ranked.slice(0,gen.count).map(r=>{
     const ex=exByName(r.name)||{id:Date.now()+Math.random(),name:r.name,muscle:r.muscle,equipment:""};
