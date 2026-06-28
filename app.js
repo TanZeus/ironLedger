@@ -91,6 +91,7 @@ function renderDB(){
   grid.innerHTML = list.map(x=>`
     <article class="ex">
       <span class="tag-muscle" style="background:${MUSCLE_COLOR[x.muscle]}">${esc(x.muscle)}</span>
+      <a class="info" href="${esc(x.wiki)}" target="_blank" rel="noopener noreferrer" title="View ${esc(x.name)} on MuscleWiki" aria-label="View ${esc(x.name)} on MuscleWiki">i</a>
       <h3>${esc(x.name)}</h3>
       <div class="meta">
         <span>${esc(x.group)}</span>

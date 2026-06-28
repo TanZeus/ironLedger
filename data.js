@@ -307,6 +307,10 @@ const RAW = [
   ["Inchworm Walk-Out","Cardio","HIIT","Bodyweight","Mobility"],
 ];
 
+const muscleWikiUrl = name =>
+  "https://musclewiki.com/directory?keyword=" +
+  encodeURIComponent(name.replace(/\s*\([^)]*\)/g, "").trim());
+
 const EXERCISES = RAW.map((r, i) => ({
   id: i + 1,
   name: r[0],
@@ -314,6 +318,7 @@ const EXERCISES = RAW.map((r, i) => ({
   group: r[2],
   equipment: r[3],
   focus: r[4],
+  wiki: muscleWikiUrl(r[0]),
 }));
 
 const MUSCLES = ["Back","Chest","Shoulders","Arms","Legs","Core","Functional","Cardio"];

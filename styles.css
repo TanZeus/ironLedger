@@ -104,7 +104,14 @@ nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
   position:absolute;top:0;right:0;font-family:"Space Mono";font-size:10px;font-weight:700;letter-spacing:.12em;
   text-transform:uppercase;padding:4px 9px;border-left:var(--bd);border-bottom:var(--bd);color:var(--ink);
 }
-.ex h3{font-size:17px;padding-right:62px;min-height:34px}
+.ex .info{
+  position:absolute;top:0;left:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  font-family:"Space Mono";font-weight:700;font-style:italic;font-size:14px;line-height:1;
+  background:var(--paper);color:var(--ink);border-right:var(--bd);border-bottom:var(--bd);
+  text-decoration:none;transition:background .09s,color .09s;
+}
+.ex .info:hover{background:var(--ink);color:var(--paper)}
+.ex h3{font-size:17px;padding-right:62px;padding-left:30px;min-height:34px}
 .ex .meta{display:flex;flex-wrap:wrap;gap:6px}
 .ex .meta span{font-family:"Space Mono";font-size:10.5px;border:2px solid var(--ink);padding:3px 7px;text-transform:uppercase;letter-spacing:.04em}
 .ex .equip{background:var(--ink);color:var(--paper)}
