@@ -19,6 +19,14 @@ can load straight into the logger:
   focus. Weights are scaled from your logged bests when you've trained the lift,
   or sensible equipment baselines otherwise.
 
+## Progress (Progress tab)
+Per-lift trends and personal records, derived entirely from your logged sessions:
+- **PR cards** — heaviest lift, best estimated 1RM (Epley: `weight × (1 + reps/30)`),
+  and biggest single-session volume across every lift you've trained.
+- **Per-lift trend chart** — pick any trained lift and plot **top weight**,
+  **estimated 1RM**, or **volume** over time on a dependency-free inline-SVG chart,
+  with new personal records marked. A recent-sessions table sits below it.
+
 ## Files
 ```
 index.html            Main page — OneSignal SDK is initialised in <head>

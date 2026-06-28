@@ -154,6 +154,7 @@ function saveSession(){
   draft=[];
   renderDraft();
   renderHistory();
+  renderProgress();
   animateTonnage(totalTonnage());
   toast(ok
     ? `Session saved · ${tonnage.toLocaleString()} kg moved`
@@ -184,7 +185,7 @@ function renderHistory(){
     </div>`).join("");
   $$("#histList .del").forEach(b=>b.onclick=()=>{
     DB.sessions=DB.sessions.filter(s=>s.id!=+b.dataset.rm);
-    save(DB); renderHistory(); animateTonnage(totalTonnage());
+    save(DB); renderHistory(); renderProgress(); animateTonnage(totalTonnage());
   });
 }
 function fmtDate(iso){
@@ -219,12 +220,156 @@ function importData(file){
       DB.sessions=[...byId.values()].sort((a,b)=>b.id-a.id);
       save(DB);
       renderHistory();
+      renderProgress();
       animateTonnage(totalTonnage());
       toast(`Imported · ${parsed.sessions.length} sessions merged`);
     }catch(e){ console.error(e); toast("Import failed — not a valid Dopamove Web backup."); }
   };
   reader.onerror=()=>toast("Couldn't read that file.");
   reader.readAsText(file);
+}
+
+let prog = { lift:null, metric:"e1rm", q:"" };
+
+const PROG_METRICS = {
+  weight: {label:"Top weight", get:p=>p.weight},
+  e1rm:   {label:"Est. 1RM",   get:p=>p.e1rm},
+  volume: {label:"Volume",     get:p=>p.volume},
+};
+
+const fmtKg = n => (Math.round(num(n)*10)/10).toLocaleString();
+function fmtShort(iso){
+  const d=new Date(iso+"T00:00:00");
+  if(isNaN(d.getTime())) return String(iso);
+  return d.toLocaleDateString(undefined,{day:"2-digit",month:"short"});
+}
+
+function progressIndex(){
+  const map=new Map();
+  [...DB.sessions].sort((a,b)=>(a.id||0)-(b.id||0)).forEach(s=>{
+    (s.items||[]).forEach(it=>{
+      const w=num(it.weight), reps=num(it.reps), sets=num(it.sets);
+      const r=map.get(it.name)||{name:it.name,muscle:it.muscle,points:[]};
+      r.points.push({id:s.id||0, date:s.date, weight:w, reps, sets, volume:sets*reps*w, e1rm:w>0?w*(1+reps/30):0});
+      map.set(it.name,r);
+    });
+  });
+  return map;
+}
+
+function liftStats(r){
+  let bestW=0,bestE=0,bestV=0,totalV=0;
+  r.points.forEach(p=>{
+    bestW=Math.max(bestW,p.weight);
+    bestE=Math.max(bestE,p.e1rm);
+    bestV=Math.max(bestV,p.volume);
+    totalV+=p.volume;
+  });
+  return {sessions:r.points.length, bestW, bestE, bestV, totalV, last:r.points[r.points.length-1]};
+}
+
+function progChart(points, getVal){
+  const W=680,H=260,pl=46,pr=14,pt=16,pb=34;
+  const vals=points.map(getVal);
+  const n=vals.length;
+  let lo=Math.min(...vals), hi=Math.max(...vals);
+  if(lo===hi){ lo=Math.max(0,lo-1); hi=hi+1; }
+  const span=hi-lo;
+  const X=i=> n<=1 ? pl+(W-pl-pr)/2 : pl+i*(W-pl-pr)/(n-1);
+  const Y=v=> H-pb-((v-lo)/span)*(H-pt-pb);
+
+  let run=-Infinity;
+  const prFlag=vals.map(v=>{ const f=v>run && v>0; if(v>run) run=v; return f; });
+  let bi=0; vals.forEach((v,i)=>{ if(v>vals[bi]) bi=i; });
+
+  const ticks=[lo,(lo+hi)/2,hi];
+  const grid=ticks.map(t=>{
+    const yy=Y(t).toFixed(1);
+    return `<line x1="${pl}" y1="${yy}" x2="${W-pr}" y2="${yy}" class="cgrid"/>`+
+           `<text x="${pl-7}" y="${(+yy+4).toFixed(1)}" class="cyl" text-anchor="end">${fmtKg(t)}</text>`;
+  }).join("");
+
+  const line = n>1 ? `<polyline points="${vals.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}" class="cline"/>` : "";
+
+  const dots=vals.map((v,i)=>{
+    const cx=X(i).toFixed(1), cy=Y(v).toFixed(1), isPR=prFlag[i];
+    return `<circle cx="${cx}" cy="${cy}" r="${isPR?5:3.2}" class="${isPR?'cpr':'cdot'}"><title>${esc(fmtShort(points[i].date))}: ${fmtKg(v)}kg${isPR?' · PR':''}</title></circle>`;
+  }).join("");
+
+  const bestY=Math.max(Y(vals[bi])-10, 12).toFixed(1);
+  const bestLabel=`<text x="${X(bi).toFixed(1)}" y="${bestY}" class="cbest" text-anchor="middle">${fmtKg(vals[bi])}</text>`;
+
+  const xi=[...new Set([0, Math.floor((n-1)/2), n-1])];
+  const xlabels=xi.map(i=>`<text x="${X(i).toFixed(1)}" y="${H-12}" class="cxl" text-anchor="middle">${esc(fmtShort(points[i].date))}</text>`).join("");
+
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Trend chart">${grid}${line}${dots}${bestLabel}${xlabels}</svg>`;
+}
+
+function prCard(label,o){
+  if(!o.name) return "";
+  return `<div class="pr-card"><span>${esc(label)}</span><b>${fmtKg(o.v)}<i>kg</i></b><small>${esc(o.name)}</small></div>`;
+}
+
+function renderProgressDetail(idx){
+  const box=$("#progDetail");
+  const r = prog.lift && idx.get(prog.lift);
+  if(!r){ box.innerHTML=`<div class="empty">Your per-lift trends will appear here.</div>`; return; }
+  const m=PROG_METRICS[prog.metric], st=liftStats(r);
+  const metricChips=Object.entries(PROG_METRICS).map(([k,v])=>
+    `<button class="chip" data-metric="${esc(k)}" data-on="${k===prog.metric}">${esc(v.label)}</button>`).join("");
+  const recent=[...r.points].slice(-12).reverse();
+  box.innerHTML=`
+    <div class="prog-head">
+      <span class="prog-tag" style="background:${MUSCLE_COLOR[r.muscle]||'var(--ink)'}">${esc(r.muscle)}</span>
+      <h3>${esc(r.name)}</h3>
+    </div>
+    <div class="prog-stats">
+      <div class="stat"><span>Sessions</span><b>${st.sessions}</b></div>
+      <div class="stat"><span>Top weight</span><b>${fmtKg(st.bestW)}<i>kg</i></b></div>
+      <div class="stat"><span>Best est. 1RM</span><b>${fmtKg(st.bestE)}<i>kg</i></b></div>
+      <div class="stat"><span>Best session vol.</span><b>${fmtKg(st.bestV)}<i>kg</i></b></div>
+    </div>
+    <div class="chip-row" style="margin:4px 0 14px">${metricChips}</div>
+    <div class="chart-wrap">${progChart(r.points,m.get)}</div>
+    <div class="scrollx"><table class="brut prog-table">
+      <thead><tr><th>Date</th><th>Sets×Reps</th><th>Weight</th><th>Est. 1RM</th><th>Volume</th></tr></thead>
+      <tbody>${recent.map(p=>`<tr><th>${esc(fmtShort(p.date))}</th><td>${num(p.sets)}×${num(p.reps)}</td><td>${fmtKg(p.weight)}kg</td><td>${fmtKg(p.e1rm)}kg</td><td>${fmtKg(p.volume)}kg</td></tr>`).join("")}</tbody>
+    </table></div>`;
+  $$("[data-metric]",box).forEach(b=>b.onclick=()=>{ prog.metric=b.dataset.metric; renderProgressDetail(idx); });
+}
+
+function renderProgress(){
+  const idx=progressIndex();
+  const rec=$("#prRecords"), box=$("#progList");
+  if(!idx.size){
+    rec.innerHTML="";
+    box.innerHTML=`<div class="empty">No lifts logged yet. Save a session to start tracking PRs.</div>`;
+    $("#progDetail").innerHTML=`<div class="empty">Your per-lift trends will appear here.</div>`;
+    return;
+  }
+  let heavy={v:0}, e1={v:0}, vol={v:0};
+  idx.forEach(r=>{
+    const st=liftStats(r);
+    if(st.bestW>heavy.v) heavy={v:st.bestW,name:r.name};
+    if(st.bestE>e1.v) e1={v:st.bestE,name:r.name};
+    if(st.bestV>vol.v) vol={v:st.bestV,name:r.name};
+  });
+  rec.innerHTML=`${prCard("Heaviest lift",heavy)}${prCard("Best est. 1RM",e1)}${prCard("Biggest session",vol)}`;
+
+  if(prog.lift && !idx.get(prog.lift)) prog.lift=null;
+  const items=[...idx.values()].map(r=>({r,st:liftStats(r)}))
+    .filter(({r})=>!prog.q || r.name.toLowerCase().includes(prog.q))
+    .sort((a,b)=>(b.r.points[b.r.points.length-1].id)-(a.r.points[a.r.points.length-1].id));
+  if(!prog.lift && items.length) prog.lift=items[0].r.name;
+
+  box.innerHTML = items.length ? items.map(({r,st})=>`
+    <button class="prog-item" data-lift="${esc(r.name)}" data-on="${r.name===prog.lift}">
+      <b>${esc(r.name)}</b>
+      <span>${st.sessions}× · top ${fmtKg(st.bestW)}kg · 1RM ${fmtKg(st.bestE)}kg</span>
+    </button>`).join("") : `<div class="empty">No lifts match.</div>`;
+  $$("[data-lift]",box).forEach(b=>b.onclick=()=>{ prog.lift=b.dataset.lift; renderProgress(); });
+
+  renderProgressDetail(idx);
 }
 
 function renderSafety(){
@@ -507,8 +652,10 @@ function init(){
   renderDB();
   renderDraft();
   renderHistory();
+  renderProgress();
   renderSafety();
 
+  $("#progSearch").addEventListener("input",e=>{ prog.q=e.target.value.toLowerCase().trim(); renderProgress(); });
   $$(".tab").forEach(t=>t.onclick=()=>switchView(t.dataset.view));
   $("#saveBtn").onclick=saveSession;
   $("#clearBtn").onclick=()=>{ if(draft.length){ draft=[]; renderDraft(); toast("Session cleared."); } };

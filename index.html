@@ -74,6 +74,7 @@
       <button class="tab" data-view="log"      role="tab" aria-selected="false">Log Session</button>
       <button class="tab" data-view="generate" role="tab" aria-selected="false">Generate</button>
       <button class="tab" data-view="history"  role="tab" aria-selected="false">History</button>
+      <button class="tab" data-view="progress" role="tab" aria-selected="false">Progress</button>
       <button class="tab" data-view="safety"   role="tab" aria-selected="false">Safety &amp; Form</button>
     </nav>
 
@@ -184,6 +185,19 @@
         <span class="mono" style="font-size:11px;opacity:.7">Back up your ledger or move it to another browser.</span>
       </div>
       <div class="hist" id="histList"></div>
+    </section>
+
+    <section class="view" id="view-progress" role="tabpanel">
+      <span class="section-eyebrow">Progress · personal records &amp; trends</span>
+      <div id="prRecords" class="pr-grid"></div>
+      <div class="prog-layout">
+        <div class="prog-side">
+          <label class="field-lbl">Find a lift</label>
+          <input id="progSearch" type="text" placeholder="Search your trained lifts…" autocomplete="off" />
+          <div class="prog-list" id="progList"></div>
+        </div>
+        <div class="prog-detail" id="progDetail"></div>
+      </div>
     </section>
 
     <section class="view" id="view-safety" role="tabpanel">
