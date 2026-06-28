@@ -53,6 +53,7 @@ const RAW = [
   ["Back Extensions (45°)","Back","Lower Back","Bodyweight","Posterior Chain"],
   ["Back Extension (Weighted)","Back","Lower Back","Plate","Posterior Chain"],
   ["Superman","Back","Lower Back","Bodyweight","Posterior Chain"],
+  ["Prone Cobra","Back","Lower Back","Bodyweight","Posterior Chain"],
   ["Barbell Shrugs","Back","Traps","Barbell","Traps"],
   ["Dumbbell Shrugs","Back","Traps","Dumbbell","Traps"],
   ["Cable Shrugs","Back","Traps","Cable","Traps"],
@@ -88,6 +89,7 @@ const RAW = [
   ["Decline Dumbbell Fly","Chest","Lower Chest","Dumbbell","Costal"],
   ["Chest Dips","Chest","Lower Chest","Bodyweight","Costal"],
   ["Incline Push-ups","Chest","Lower Chest","Bodyweight","Costal"],
+  ["Knee Push-Up","Chest","Middle Chest","Bodyweight","Sternal"],
 
   /* ---------------- SHOULDERS ---------------- */
   ["Military Press","Shoulders","Front Delts","Barbell","Anterior"],
@@ -116,6 +118,7 @@ const RAW = [
   ["Dumbbell Reverse Fly","Shoulders","Rear Delts","Dumbbell","Posterior"],
   ["Rear Delt Row","Shoulders","Rear Delts","Barbell","Posterior"],
   ["Wide-Grip Seated Row","Shoulders","Rear Delts","Cable","Posterior"],
+  ["Dumbbell Y-Raise","Shoulders","Rear Delts","Dumbbell","Posterior"],
 
   /* ---------------- ARMS ---------------- */
   ["Incline Dumbbell Curl","Arms","Biceps","Dumbbell","Long Head"],
@@ -194,6 +197,21 @@ const RAW = [
   ["Reverse Hyperextension","Legs","Glutes","Bodyweight","Isolation"],
   ["Clamshells","Legs","Glutes","Bodyweight","Isolation"],
   ["Frog Pumps","Legs","Glutes","Bodyweight","Isolation"],
+  ["Fire Hydrants","Legs","Glutes","Bodyweight","Isolation"],
+  ["Donkey Kicks","Legs","Glutes","Bodyweight","Isolation"],
+  ["Cable Donkey Kicks","Legs","Glutes","Cable","Isolation"],
+  ["Glute Kickback Machine","Legs","Glutes","Machine","Isolation"],
+  ["Side-Lying Hip Abduction","Legs","Glutes","Bodyweight","Isolation"],
+  ["Curtsy Lunge","Legs","Glutes","Dumbbell","Unilateral"],
+  ["Sumo Squat","Legs","Glutes","Dumbbell","Heavy"],
+  ["Barbell Sumo Squat","Legs","Glutes","Barbell","Heavy"],
+  ["Banded Squat Walk","Legs","Glutes","Bodyweight","Activation"],
+  ["Hip Adductor Machine","Legs","Adductors","Machine","Isolation"],
+  ["Lateral Lunge","Legs","Adductors","Dumbbell","Unilateral"],
+  ["Barbell Lateral Lunge","Legs","Adductors","Barbell","Unilateral"],
+  ["Cable Hip Adduction","Legs","Adductors","Cable","Isolation"],
+  ["Side-Lying Adductor Raise","Legs","Adductors","Bodyweight","Isolation"],
+  ["Copenhagen Plank","Legs","Adductors","Bodyweight","Stability"],
   ["Standing Calf Raise","Legs","Calves","Machine","Gastrocnemius"],
   ["Barbell Calf Raise","Legs","Calves","Barbell","Gastrocnemius"],
   ["Dumbbell Calf Raise","Legs","Calves","Dumbbell","Gastrocnemius"],
@@ -210,6 +228,8 @@ const RAW = [
   ["Toes-to-Bar","Core","Rectus Abdominis","Bodyweight","Lower"],
   ["Reverse Crunches","Core","Rectus Abdominis","Bodyweight","Lower"],
   ["Mountain Climbers","Core","Rectus Abdominis","Bodyweight","Lower"],
+  ["Flutter Kicks","Core","Rectus Abdominis","Bodyweight","Lower"],
+  ["Scissor Kicks","Core","Rectus Abdominis","Bodyweight","Lower"],
   ["Crunches","Core","Rectus Abdominis","Bodyweight","Upper"],
   ["V-Ups","Core","Rectus Abdominis","Bodyweight","Upper"],
   ["Sit-Ups (Decline)","Core","Rectus Abdominis","Bodyweight","Upper"],
@@ -239,6 +259,9 @@ const RAW = [
   ["Bird Dog","Core","Transverse Abdominis","Bodyweight","Stability"],
   ["Pelvic Tilts","Core","Transverse Abdominis","Bodyweight","Stability"],
   ["Weighted Plank","Core","Transverse Abdominis","Plate","Stability"],
+  ["Pilates Hundred","Core","Transverse Abdominis","Bodyweight","Stability"],
+  ["Leg Circles","Core","Transverse Abdominis","Bodyweight","Stability"],
+  ["Glute Bridge March","Core","Transverse Abdominis","Bodyweight","Stability"],
 
   /* ---------------- FUNCTIONAL ---------------- */
   ["Turkish Get-Up","Functional","Kettlebell","Kettlebell","Total Body"],
@@ -263,6 +286,11 @@ const RAW = [
   ["Trap Bar Deadlift","Functional","Full Body","Trap Bar","Hip Hinge"],
   ["Trap Bar Farmer's Walk","Functional","Full Body","Trap Bar","Grip + Core"],
   ["Farmer's Carries","Functional","Full Body","Dumbbell","Grip + Core"],
+  ["Burpees","Functional","Full Body","Bodyweight","Conditioning"],
+  ["Jump Squats","Functional","Full Body","Bodyweight","Plyometric"],
+  ["Jumping Lunges","Functional","Full Body","Bodyweight","Plyometric"],
+  ["Step-Up to Knee Drive","Functional","Full Body","Bodyweight","Unilateral"],
+  ["Jump Rope","Functional","Full Body","Bodyweight","Conditioning"],
 ];
 
 const EXERCISES = RAW.map((r, i) => ({
