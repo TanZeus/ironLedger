@@ -278,6 +278,33 @@ const RAW = [
   ["Jumping Lunges","Functional","Full Body","Bodyweight","Plyometric"],
   ["Step-Up to Knee Drive","Functional","Full Body","Bodyweight","Unilateral"],
   ["Jump Rope","Functional","Full Body","Bodyweight","Conditioning"],
+
+  ["Treadmill Run","Cardio","Running","Machine","Aerobic Endurance"],
+  ["Treadmill Incline Walk","Cardio","Running","Machine","Low Impact"],
+  ["Outdoor Run","Cardio","Running","Bodyweight","Aerobic Endurance"],
+  ["Outdoor Walk","Cardio","Running","Bodyweight","Low Impact"],
+  ["Sprint Intervals","Cardio","Running","Bodyweight","High Intensity"],
+  ["Stair Running","Cardio","Running","Bodyweight","Power"],
+  ["Stationary Bike (Upright)","Cardio","Cycling","Machine","Aerobic Endurance"],
+  ["Stationary Bike (Recumbent)","Cardio","Cycling","Machine","Low Impact"],
+  ["Spin Bike","Cardio","Cycling","Machine","High Intensity"],
+  ["Outdoor Cycling","Cardio","Cycling","Bodyweight","Aerobic Endurance"],
+  ["Rowing Machine","Cardio","Rowing","Machine","Full Body"],
+  ["Ski Erg","Cardio","Rowing","Machine","Upper Body Pull"],
+  ["Stairmaster","Cardio","Stair Climbing","Machine","Glute + Cardio"],
+  ["Jacob's Ladder","Cardio","Stair Climbing","Machine","Full Body"],
+  ["Elliptical","Cardio","Low Impact","Machine","Full Body"],
+  ["Air Bike (Assault)","Cardio","Full Body","Machine","Max Output"],
+  ["Sled Push","Cardio","Conditioning","Machine","Lower Body Drive"],
+  ["Sled Pull","Cardio","Conditioning","Machine","Upper Body Pull"],
+  ["Jumping Jacks","Cardio","HIIT","Bodyweight","Conditioning"],
+  ["High Knees","Cardio","HIIT","Bodyweight","Conditioning"],
+  ["Butt Kicks","Cardio","HIIT","Bodyweight","Conditioning"],
+  ["Shadow Boxing","Cardio","HIIT","Bodyweight","Coordination"],
+  ["Lateral Shuffles","Cardio","HIIT","Bodyweight","Agility"],
+  ["Skater Jumps","Cardio","HIIT","Bodyweight","Plyometric"],
+  ["Bear Crawls","Cardio","HIIT","Bodyweight","Full Body"],
+  ["Inchworm Walk-Out","Cardio","HIIT","Bodyweight","Mobility"],
 ];
 
 const EXERCISES = RAW.map((r, i) => ({
@@ -289,7 +316,7 @@ const EXERCISES = RAW.map((r, i) => ({
   focus: r[4],
 }));
 
-const MUSCLES = ["Back","Chest","Shoulders","Arms","Legs","Core","Functional"];
+const MUSCLES = ["Back","Chest","Shoulders","Arms","Legs","Core","Functional","Cardio"];
 const EQUIPMENT = [...new Set(EXERCISES.map(e => e.equipment))].sort();
 
 const MUSCLE_COLOR = {
@@ -300,6 +327,7 @@ const MUSCLE_COLOR = {
   Legs:"var(--lime)",
   Core:"var(--orange)",
   Functional:"var(--ink)",
+  Cardio:"var(--red)",
 };
 
 const INJURIES = [
