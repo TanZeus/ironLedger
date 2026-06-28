@@ -473,8 +473,8 @@ function genFromIntensity(){
   const owned = ex => haveAll || gen.equipment.has(ex.equipment);
   let picks;
   if(gen.focus==="Full body"){
-    const byMuscle={}; MUSCLES.forEach(m=>byMuscle[m]=shuffle(EXERCISES.filter(e=>e.muscle===m && owned(e))));
-    const muscles=MUSCLES.filter(m=>byMuscle[m].length);
+    const byMuscle={}; MUSCLES.filter(m=>m!=="Cardio").forEach(m=>byMuscle[m]=shuffle(EXERCISES.filter(e=>e.muscle===m && owned(e))));
+    const muscles=MUSCLES.filter(m=>byMuscle[m]?.length);
     picks=[]; let mi=0, guard=0;
     while(picks.length<gen.count && muscles.length && guard++<400){
       const arr=byMuscle[muscles[mi++%muscles.length]];
@@ -510,10 +510,10 @@ function genFromGoal(){
   let picks;
   if(gen.focus==="Full body"){
     const byMuscle={};
-    MUSCLES.forEach(m=>byMuscle[m]=pickPool(m));
+    MUSCLES.filter(m=>m!=="Cardio").forEach(m=>byMuscle[m]=pickPool(m));
     const muscleOrder=g.bias
-      ?[...g.bias.filter(m=>byMuscle[m]?.length),...MUSCLES.filter(m=>!g.bias.includes(m)&&byMuscle[m]?.length)]
-      :MUSCLES.filter(m=>byMuscle[m]?.length);
+      ?[...g.bias.filter(m=>byMuscle[m]?.length),...MUSCLES.filter(m=>m!=="Cardio"&&!g.bias.includes(m)&&byMuscle[m]?.length)]
+      :MUSCLES.filter(m=>m!=="Cardio"&&byMuscle[m]?.length);
     picks=[];let mi=0,guard=0;
     while(picks.length<gen.count&&muscleOrder.length&&guard++<400){
       const arr=byMuscle[muscleOrder[mi++%muscleOrder.length]];
@@ -545,6 +545,8 @@ function genFromHistory(){
   if(gen.focus!=="Full body"){
     const f=ranked.filter(r=>r.muscle===gen.focus);
     if(f.length) ranked=f;
+  } else {
+    ranked=ranked.filter(r=>r.muscle!=="Cardio");
   }
   return ranked.slice(0,gen.count).map(r=>{
     const ex=exByName(r.name)||{id:Date.now()+Math.random(),name:r.name,muscle:r.muscle,equipment:""};
