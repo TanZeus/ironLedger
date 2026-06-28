@@ -2,6 +2,7 @@ const $  = (s,el=document)=>el.querySelector(s);
 const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
 const STORE = "ironledger.v1";
 const DRAFT_STORE = "ironledger.draft.v1";
+const EQUIP_STORE = "ironledger.equipment.v1";
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => (
   {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]
@@ -403,7 +404,19 @@ function renderSafety(){
   $("#brace").innerHTML = BRACE.map((b,i)=>`<li><span>${esc(b)}</span><span class="mono">0${i+1}</span></li>`).join("");
 }
 
-let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", result:[] };
+function loadEquip(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(EQUIP_STORE));
+    if(Array.isArray(saved)){
+      const valid=saved.filter(e=>EQUIPMENT.includes(e));
+      if(valid.length) return new Set(valid);
+    }
+  }catch{}
+  return new Set(EQUIPMENT);
+}
+function saveEquip(set){ try{ localStorage.setItem(EQUIP_STORE, JSON.stringify([...set])); }catch{} }
+
+let gen = { mode:null, intensity:"hypertrophy", focus:"Full body", count:6, histMode:"recent", equipment:loadEquip(), result:[] };
 
 const INTENSITY = {
   deload:       {label:"Deload",       sets:2, reps:14, load:0.60, accent:"var(--blue)",   note:"Recovery — light, clean reps to flush volume without taxing you."},
@@ -446,17 +459,23 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=(Math.random()*(i+1)
 function genFromIntensity(){
   const p=INTENSITY[gen.intensity];
   const idx=historyIndex();
+  /* only build from gear the lifter actually has; fall back to everything if
+     nothing is selected so we never hand back an empty workout */
+  const haveAll = gen.equipment.size===0 || gen.equipment.size===EQUIPMENT.length;
+  const owned = ex => haveAll || gen.equipment.has(ex.equipment);
   let picks;
   if(gen.focus==="Full body"){
-    const byMuscle={}; MUSCLES.forEach(m=>byMuscle[m]=shuffle(EXERCISES.filter(e=>e.muscle===m)));
+    const byMuscle={}; MUSCLES.forEach(m=>byMuscle[m]=shuffle(EXERCISES.filter(e=>e.muscle===m && owned(e))));
+    const muscles=MUSCLES.filter(m=>byMuscle[m].length);
     picks=[]; let mi=0, guard=0;
-    while(picks.length<gen.count && guard++<400){
-      const arr=byMuscle[MUSCLES[mi++%MUSCLES.length]];
+    while(picks.length<gen.count && muscles.length && guard++<400){
+      const arr=byMuscle[muscles[mi++%muscles.length]];
       if(arr&&arr.length) picks.push(arr.pop());
     }
   } else {
-    let pool=EXERCISES.filter(e=>e.muscle===gen.focus);
-    if(!pool.length) pool=EXERCISES.slice();
+    /* no owned lift for this muscle → return nothing so generate() can explain,
+       rather than silently handing back unrelated movements */
+    const pool=EXERCISES.filter(e=>e.muscle===gen.focus && owned(e));
     picks=shuffle(pool).slice(0,gen.count);
   }
   return picks.map(ex=>{
@@ -495,12 +514,36 @@ function genFromHistory(){
 function generate(){
   const rows = gen.mode==="history" ? genFromHistory() : genFromIntensity();
   if(!rows.length){
-    toast(gen.mode==="history" ? "No history yet — log a session, or use 'By intensity'." : "Couldn't build a workout.");
+    let msg="Couldn't build a workout.";
+    if(gen.mode==="history"){
+      msg="No history yet — log a session, or use 'By intensity'.";
+    } else if(gen.equipment.size && gen.equipment.size<EQUIPMENT.length){
+      msg = gen.focus==="Full body"
+        ? "No lifts match your equipment — add some gear above."
+        : `No ${gen.focus} lifts for your equipment — try another focus or add gear.`;
+    }
+    toast(msg);
     return;
   }
   gen.result=rows;
   renderGenResult();
   showLayer(3);
+}
+
+/* short label of the gear a generated workout was built from */
+function equipSummary(){
+  const sz=gen.equipment.size;
+  if(sz===0 || sz===EQUIPMENT.length) return "Full kit";
+  const list=[...gen.equipment];
+  return list.length<=3 ? list.join(" · ") : `${sz} equipment types`;
+}
+
+/* how many lifts the current equipment selection unlocks */
+function equipNoteText(){
+  if(gen.equipment.size===0) return "No equipment selected — pick what you've got, or the engine falls back to the full library.";
+  const n=EXERCISES.filter(e=>gen.equipment.has(e.equipment)).length;
+  if(gen.equipment.size===EQUIPMENT.length) return `Using everything — all ${n} lifts in play.`;
+  return `${n} lift${n===1?"":"s"} available with your ${gen.equipment.size} selected item${gen.equipment.size===1?"":"s"}.`;
 }
 
 function renderGenConfig(){
@@ -516,11 +559,22 @@ function renderGenConfig(){
 
   if(gen.mode==="intensity"){
     const intens=Object.entries(INTENSITY).map(([k,v])=>
-      `<button class="chip" data-intensity="${esc(k)}" data-on="${k===gen.intensity}">${esc(v.label)}</button>`).join("");
+      `<button class="chip" data-intensity="${k}" data-on="${k===gen.intensity}">${v.label}</button>`).join("");
+    const equipChips=EQUIPMENT.map(e=>
+      `<button class="chip" data-equip="${e}" data-on="${gen.equipment.has(e)}">${e}</button>`).join("");
     box.innerHTML=`
       <span class="section-eyebrow">Intensity</span>
       <div class="chip-row">${intens}</div>
-      <p class="cfg-note" id="intNote">${esc(INTENSITY[gen.intensity].note)}</p>
+      <p class="cfg-note" id="intNote">${INTENSITY[gen.intensity].note}</p>
+      <div class="equip-head" style="margin-top:18px">
+        <span class="section-eyebrow" style="margin-bottom:0">Equipment you have</span>
+        <span class="equip-tools">
+          <button class="linkbtn" data-equip-all>All</button>
+          <button class="linkbtn" data-equip-none>None</button>
+        </span>
+      </div>
+      <div class="chip-row" id="equipPick" style="margin-top:10px">${equipChips}</div>
+      <p class="cfg-note" id="equipNote">${equipNoteText()}</p>
       <span class="section-eyebrow" style="margin-top:18px">Focus</span>
       <div class="chip-row">${focusChips}</div>
       ${countBlock}`;
@@ -557,6 +611,21 @@ function wireGenConfig(){
     gen.focus=b.dataset.focus;
     $$("[data-focus]",box).forEach(c=>c.dataset.on=(c.dataset.focus===gen.focus));
   });
+  /* equipment: toggle individual chips, or bulk All / None */
+  const syncEquip=()=>{
+    $$("[data-equip]",box).forEach(c=>c.dataset.on=gen.equipment.has(c.dataset.equip));
+    const note=$("#equipNote"); if(note) note.textContent=equipNoteText();
+    saveEquip(gen.equipment);
+  };
+  $$("[data-equip]",box).forEach(b=>b.onclick=()=>{
+    const e=b.dataset.equip;
+    gen.equipment.has(e) ? gen.equipment.delete(e) : gen.equipment.add(e);
+    syncEquip();
+  });
+  const allBtn=$("[data-equip-all]",box);
+  if(allBtn) allBtn.onclick=()=>{ gen.equipment=new Set(EQUIPMENT); syncEquip(); };
+  const noneBtn=$("[data-equip-none]",box);
+  if(noneBtn) noneBtn.onclick=()=>{ gen.equipment.clear(); syncEquip(); };
   $$("[data-hmode]",box).forEach(b=>b.onclick=()=>{
     gen.histMode=b.dataset.hmode;
     $$("[data-hmode]",box).forEach(c=>c.dataset.on=(c.dataset.hmode===gen.histMode));
@@ -573,9 +642,17 @@ function renderGenResult(){
   const title = gen.mode==="intensity"
     ? `${INTENSITY[gen.intensity].label} · ${gen.focus}`
     : ({recent:"Repeat last session",frequent:"Most-frequent lifts",progressive:"Progressive overload"})[gen.histMode];
+  /* show the equipment the engine actually built from (intensity mode only) */
+  const sub = gen.mode==="intensity"
+    ? `${equipSummary()} · ${rows.length} lift${rows.length===1?"":"s"}`
+    : "";
   $("#genResult").innerHTML=`
     <div class="gen-head" style="box-shadow:6px 6px 0 ${accent}">
-      <div><span class="section-eyebrow">Generated workout</span><h3>${esc(title)}</h3></div>
+      <div>
+        <span class="section-eyebrow">Generated workout</span>
+        <h3>${title}</h3>
+        ${sub?`<p class="gen-sub mono">${sub}</p>`:""}
+      </div>
       <div class="gen-tot"><b>${tons.toLocaleString()}</b><span>kg planned</span></div>
     </div>
     <div class="gen-list">
