@@ -1,4 +1,4 @@
-# IRONLEDGER — Neo-Brutalist Gym Tracker
+# DOPAMOVE WEB — Neo-Brutalist Gym Tracker
 
 A local-first gym tracker. Open on a **cover page**, browse a 161-lift exercise
 database (parsed from your encyclopedia), log sessions, **auto-generate your next

@@ -1,6 +1,6 @@
 {
-  "name": "IRONLEDGER",
-  "short_name": "IRONLEDGER",
+  "name": "Dopamove Web",
+  "short_name": "Dopamove Web",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#F3EEE1",

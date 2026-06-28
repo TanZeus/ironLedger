@@ -1,5 +1,5 @@
 /* =========================================================================
-   IRONLEDGER · app logic (vanilla JS, no build step)
+   DOPAMOVE WEB · app logic (vanilla JS, no build step)
    ========================================================================= */
 const $  = (s,el=document)=>el.querySelector(s);
 const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
@@ -22,7 +22,7 @@ const STORAGE_OK = storageAvailable();
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE)) || {sessions:[]}; }catch{ return {sessions:[]}; } }
 function save(d){
   try{ localStorage.setItem(STORE, JSON.stringify(d)); return true; }
-  catch(e){ console.error("IronLedger: session save failed", e); return false; }
+  catch(e){ console.error("Dopamove Web: session save failed", e); return false; }
 }
 let DB = load();
 
@@ -226,7 +226,7 @@ function importData(file){
   reader.onload=()=>{
     try{
       const parsed=JSON.parse(reader.result);
-      if(!parsed || !Array.isArray(parsed.sessions)) throw new Error("not an IronLedger backup");
+      if(!parsed || !Array.isArray(parsed.sessions)) throw new Error("not a Dopamove Web backup");
       /* merge with what's already here, de-duping by session id */
       const byId=new Map();
       [...DB.sessions,...parsed.sessions].forEach(s=>{ if(s && s.id!=null) byId.set(s.id,s); });
@@ -235,7 +235,7 @@ function importData(file){
       renderHistory();
       animateTonnage(totalTonnage());
       toast(`Imported · ${parsed.sessions.length} sessions merged`);
-    }catch(e){ console.error(e); toast("Import failed — not a valid IronLedger backup."); }
+    }catch(e){ console.error(e); toast("Import failed — not a valid Dopamove Web backup."); }
   };
   reader.onerror=()=>toast("Couldn't read that file.");
   reader.readAsText(file);
