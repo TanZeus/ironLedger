@@ -1,20 +1,57 @@
-# IRONLEDGER — Neo-Brutalist Gym Tracker
+# DOPAMOVE WEB — Neo-Brutalist Gym Tracker
 
-A local-first gym tracker. Browse a 161-lift exercise database (parsed from your
-encyclopedia), log sessions, track lifetime tonnage, and read a safety/form guide.
-Push reminders are wired through the **OneSignal Web SDK (v16)**.
+A local-first gym tracker. Open on a **cover page**, browse a 273-lift exercise
+database (parsed from your encyclopedia), log sessions, **auto-generate your next
+workout**, track lifetime tonnage, and read a safety/form guide. Push reminders
+are wired through the **OneSignal Web SDK (v16)**.
+
+Everything is static (HTML/CSS/vanilla JS, no build step), so it deploys as-is to
+**GitHub Pages** — keep all files at the repo root so `OneSignalSDKWorker.js`
+stays reachable at the site root.
+
+## Workout engine (Generate tab)
+A layered, click-through builder — pick a source, tune it, then get a workout you
+can load straight into the logger:
+- **From your history** — *repeat your last session*, your *most-frequent lifts*,
+  or *progressive overload* (+2.5% on each lift's last load).
+- **By intensity** — auto-generate from the full database, dialled to a training
+  intensity (**Deload / Hypertrophy / Strength / Conditioning**), a muscle
+  focus, and **the equipment you actually have**. Tick the gear in your
+  home gym or commercial setup and the engine only builds from lifts you can
+  do; your selection is remembered between visits. Weights are scaled from your
+  logged bests when you've trained the lift, or sensible equipment baselines
+  otherwise.
+
+## Progress (Progress tab)
+Per-lift trends and personal records, derived entirely from your logged sessions:
+- **PR cards** — heaviest lift, best estimated 1RM (Epley: `weight × (1 + reps/30)`),
+  and biggest single-session volume across every lift you've trained.
+- **Per-lift trend chart** — pick any trained lift and plot **top weight**,
+  **estimated 1RM**, or **volume** over time on a dependency-free inline-SVG chart,
+  with new personal records marked. A recent-sessions table sits below it.
 
 ## Files
 ```
 index.html            Main page — OneSignal SDK is initialised in <head>
 styles.css            Neo-Brutalist styles
-data.js               Exercise DB (161 lifts) + safety/form content
+data.js               Exercise DB (273 lifts) + safety/form content
 app.js                Browser, logger, history, safety, OneSignal hooks
 OneSignalSDKWorker.js  Service worker — MUST sit at the site root
 manifest.json         Web app manifest (needed for iOS 16.4+ web push)
 ```
 Your data is saved in the browser via `localStorage` — nothing leaves the device
 except the OneSignal subscription.
+
+### Saving & backups
+- **Saved sessions** persist under the `ironledger.v1` key. If the browser
+  blocks storage (private mode) or the quota is full, the save is reported as
+  failed instead of silently lost.
+- **In-progress drafts** auto-save under `ironledger.draft.v1`, so a refresh or
+  crash mid-workout won't lose the lifts you've entered.
+- **Export / Import** (History tab) downloads your whole ledger as a JSON file
+  and restores it — useful for backups, clearing-cache survival, or moving the
+  data to another browser or device. Imports are *merged* (de-duped by id), not
+  overwritten.
 
 ## Run locally
 Service workers need a server (not `file://`). From this folder:
