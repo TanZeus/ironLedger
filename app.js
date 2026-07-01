@@ -79,6 +79,8 @@ function buildFilters(){
   $("#search").addEventListener("input",e=>{ query=e.target.value.toLowerCase().trim(); renderDB(); });
 }
 
+const muscleWikiUrl = name => `https://www.google.com/search?q=${encodeURIComponent(`site:musclewiki.com ${name}`)}`;
+
 function renderDB(){
   const list = EXERCISES.filter(x=>
     (activeMuscle==="All"||x.muscle===activeMuscle) &&
@@ -97,7 +99,10 @@ function renderDB(){
         <span>${esc(x.focus)}</span>
         <span class="equip">${esc(x.equipment)}</span>
       </div>
-      <button class="addbtn" data-add="${x.id}">+ Add to session</button>
+      <div class="ex-actions">
+        <button class="addbtn" data-add="${x.id}">+ Add to session</button>
+        <a class="infobtn" href="${muscleWikiUrl(x.name)}" target="_blank" rel="noopener noreferrer" title="Look up ${esc(x.name)} on MuscleWiki" aria-label="Look up ${esc(x.name)} on MuscleWiki">i</a>
+      </div>
     </article>`).join("");
   $$("[data-add]",grid).forEach(b=>b.onclick=()=>addToDraft(+b.dataset.add));
 }

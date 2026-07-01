@@ -108,12 +108,20 @@ nav.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 20px}
 .ex .meta{display:flex;flex-wrap:wrap;gap:6px}
 .ex .meta span{font-family:"Space Mono";font-size:10.5px;border:2px solid var(--ink);padding:3px 7px;text-transform:uppercase;letter-spacing:.04em}
 .ex .equip{background:var(--ink);color:var(--paper)}
+.ex .ex-actions{margin-top:4px;display:flex;gap:8px}
 .ex .addbtn{
-  margin-top:4px;border:var(--bd);background:var(--lime);padding:9px;font-weight:800;text-transform:uppercase;
+  flex:1;border:var(--bd);background:var(--lime);padding:9px;font-weight:800;text-transform:uppercase;
   font-size:12.5px;letter-spacing:.06em;box-shadow:3px 3px 0 var(--ink);transition:transform .07s,box-shadow .07s;
 }
 .ex .addbtn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
 .ex .addbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.ex .infobtn{
+  flex:none;width:40px;display:grid;place-items:center;border:var(--bd);background:var(--blue);
+  font-family:"Space Mono";font-weight:700;font-size:16px;font-style:italic;color:var(--ink);text-decoration:none;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .07s,box-shadow .07s;
+}
+.ex .infobtn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.ex .infobtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .empty{font-family:"Space Mono";padding:40px;text-align:center;border:3px dashed var(--ink);grid-column:1/-1}
 
 .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:20px}
